@@ -12,8 +12,8 @@ void Exit();
 UINT64 insCount = 0;  // number of dynamically executed instructions
 UINT64 bblCount = 0;  // number of dynamically executed basic blocks
 
-UINT64 fast_forward_count = 20;  // 207000000000;
-UINT64 run_inst_count = 100;     // 1000000000;
+UINT64 fast_forward_count = 301000000000;
+UINT64 run_inst_count = 1000000000;
 // UINT64 checkedIns = 0;
 
 UINT64 insCountAnalyzed = 0;
@@ -31,7 +31,10 @@ std::ostream *out = &cerr;
 // Command line switches
 /* ===================================================================== */
 KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool", "o", "",
-                            "specify file name for MyPinTool output");
+                            "specify file name for HW1 output");
+
+KNOB<string> KnobFastForwardCount(KNOB_MODE_WRITEONCE, "pintool", "f", "",
+                                  "specify fast forward count for HW1");
 
 KNOB<BOOL> KnobCount(
     KNOB_MODE_WRITEONCE, "pintool", "count", "1",
@@ -168,6 +171,7 @@ void outputInstructionCounts() {
 
 void Exit() {
     totalIns = insCountAnalyzed + cntLoad + cntStore;
+    *out << "Fast forward count: " << fast_forward_count << endl;
     *out << "===============================================" << endl;
     *out << "MyPinTool analysis results: " << endl;
     *out << "Number of instructions: " << insCount << endl;
@@ -177,7 +181,11 @@ void Exit() {
     outputInstructionCounts();
 
     UINT64 totalCycles = insCountAnalyzed * 1 + (cntLoad + cntStore) * 50;
-    *out << "CPI: " << ((double)totalCycles) / totalIns;
+    *out << "CPI: " << ((double)totalCycles) / totalIns << endl;
+
+    for (int i = 0; i < 76; i++) {
+        *out << CATEGORY_StringShort(i) << ": " << catCounts[i] << endl;
+    }
 
     exit(0);
 }
@@ -190,6 +198,9 @@ int main(int argc, char *argv[]) {
     }
 
     string fileName = KnobOutputFile.Value();
+    string ffCountString = KnobFastForwardCount.Value();
+    fast_forward_count = atoll(ffCountString.c_str());
+    cout << "Fast forward count: " << fast_forward_count << endl;
 
     if (!fileName.empty()) {
         out = new std::ofstream(fileName.c_str());
