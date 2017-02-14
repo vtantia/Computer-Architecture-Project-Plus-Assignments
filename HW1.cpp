@@ -2,6 +2,7 @@
 #include "xed-category-enum.h"
 #include <fstream>
 #include <iostream>
+#define SIZE ((1 << 24) + 1)
 
 void Exit();
 
@@ -12,8 +13,8 @@ void Exit();
 UINT64 insCount = 0; // number of dynamically executed instructions
 UINT64 bblCount = 0; // number of dynamically executed basic blocks
 
-UINT64 fast_forward_count = 301000000000;
-UINT64 run_inst_count = 1000000000;
+UINT64 fast_forward_count = 30;
+UINT64 run_inst_count = 100;
 // UINT64 checkedIns = 0;
 
 UINT64 insCountAnalyzed = 0;
@@ -26,6 +27,9 @@ UINT64 cntLoad = 0;
 UINT64 cntStore = 0;
 
 std::ostream *out = &cerr;
+
+static UINT64 ArrayIns[SIZE] = {0};
+static UINT64 ArrayDat[SIZE] = {0};
 
 /* ===================================================================== */
 // Command line switches
@@ -66,10 +70,15 @@ ADDRINT FastForward(void) {
 // Analysis routines
 /* ===================================================================== */
 
-VOID Analysis(UINT32 category, UINT32 isDirect) {
-  insCountAnalyzed++;
-  catCounts[category]++;
+VOID Analysis(UINT32 category, UINT32 isDirect, UINT32 size, ADDRINT addr,
+              BOOL pred) {
+  if (pred) {
+    insCountAnalyzed++;
+    catCounts[category]++;
+  }
   cntDirect += (category == XED_CATEGORY_CALL) && isDirect;
+  ArrayIns[(addr / 32)] =
+      MAX((addr + size - 1) / 32, ArrayIns[(addr / 32)]);
 }
 
 VOID CountBbl(UINT32 numInstInBbl) {
@@ -77,9 +86,13 @@ VOID CountBbl(UINT32 numInstInBbl) {
   insCount += numInstInBbl;
 }
 
-VOID RecordMemLoadStore(UINT32 isRead, UINT32 isWrite, UINT32 size) {
+VOID RecordMemLoadStore(UINT32 isRead, UINT32 isWrite, UINT32 size,
+                        ADDRINT addr, BOOL isMem) {
   cntLoad += (isRead * size + 3) / 4;
   cntStore += (isWrite * size + 3) / 4;
+  // cout << addr << " " << size << endl;
+  ArrayDat[(addr / 32) * isMem] =
+      MAX((addr + size - 1) / 32, isMem * ArrayDat[(addr / 32)]);
 }
 
 VOID CountIns(UINT32 numInstInBbl) { insCount++; }
@@ -93,18 +106,26 @@ VOID Instruction(INS ins, VOID *v) {
 
   // If fast forward portion is over, analyze
   INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-  INS_InsertThenPredicatedCall(ins, IPOINT_BEFORE, (AFUNPTR)Analysis,
-                               IARG_UINT32, INS_Category(ins), IARG_UINT32,
-                               INS_IsDirectCall(ins), IARG_END);
+  INS_InsertThenCall(ins, IPOINT_BEFORE, (AFUNPTR)Analysis, IARG_UINT32,
+                     INS_Category(ins), IARG_UINT32, INS_IsDirectCall(ins),
+                     IARG_UINT32, INS_Size(ins), IARG_ADDRINT,
+                     INS_Address(ins), IARG_BOOL, INS_IsPredicated(ins),
+                     IARG_END);
 
   UINT32 memOperands = INS_MemoryOperandCount(ins);
   for (UINT32 memOp = 0; memOp < memOperands; memOp++) {
+    ADDRINT addr = (INS_OperandMemoryBaseReg(ins, memOp) +
+                    INS_OperandMemoryDisplacement(ins, memOp) +
+                    INS_OperandMemoryIndexReg(ins, memOp) *
+                        INS_OperandMemoryScale(ins, memOp)) /
+                   8;
     INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
     INS_InsertThenPredicatedCall(
         ins, IPOINT_BEFORE, (AFUNPTR)RecordMemLoadStore, IARG_UINT32,
         INS_MemoryOperandIsRead(ins, memOp), IARG_UINT32,
         INS_MemoryOperandIsWritten(ins, memOp), IARG_UINT32,
-        INS_MemoryOperandSize(ins, memOp), IARG_END);
+        INS_MemoryOperandSize(ins, memOp), IARG_ADDRINT, addr, IARG_BOOL,
+        INS_OperandIsMemory(ins, memOp), IARG_END);
   }
 
   // If termination region, then exit
@@ -147,6 +168,22 @@ void outputInstructionCounts() {
        << endl;
 }
 
+UINT64 findChunks(UINT64 *arr) {
+  UINT64 i = 0;
+  UINT64 cnt = 0;
+  UINT64 ptr = 0;
+  for (i = 0; i < SIZE; i++) {
+    if (arr[i] != 0) {
+      ptr = MAX(ptr, arr[i]);
+    }
+    if (i <= ptr) {
+      cnt += 1;
+    }
+    i++;
+  }
+  return cnt;
+}
+
 void Exit() {
   totalIns = insCountAnalyzed + cntLoad + cntStore;
   *out << "Fast forward count: " << fast_forward_count << endl;
@@ -161,9 +198,18 @@ void Exit() {
   UINT64 totalCycles = insCountAnalyzed * 1 + (cntLoad + cntStore) * 50;
   *out << "CPI: " << ((double)totalCycles) / totalIns << endl;
 
+  *out << endl;
+  *out << endl;
   for (int i = 0; i < 76; i++) {
     *out << CATEGORY_StringShort(i) << ": " << catCounts[i] << endl;
   }
+
+  *out << endl;
+  *out << endl;
+  *out << "Instruction footprint: (multiples of 32): "
+       << findChunks(ArrayIns) << endl;
+  *out << "Data footprint: (multiples of 32): " << findChunks(ArrayDat)
+       << endl;
 
   exit(0);
 }
