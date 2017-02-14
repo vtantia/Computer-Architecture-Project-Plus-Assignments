@@ -66,12 +66,11 @@ ADDRINT FastForward(void) {
 // Analysis routines
 /* ===================================================================== */
 
-VOID Analysis(UINT32 category) {
+VOID Analysis(UINT32 category, UINT32 isDirect) {
     insCountAnalyzed++;
     catCounts[category]++;
+    cntDirect += (category == XED_CATEGORY_CALL) && isDirect;
 }
-
-VOID CountDirectCalls(UINT32 flag) { cntDirect += flag; }
 
 VOID CountBbl(UINT32 numInstInBbl) {
     bblCount++;
@@ -98,19 +97,8 @@ VOID Instruction(INS ins, VOID *v) {
     // If fast forward portion is over, analyze
     INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
     INS_InsertThenPredicatedCall(ins, IPOINT_BEFORE, (AFUNPTR)Analysis,
-                                 IARG_UINT32, INS_Category(ins), IARG_END);
-
-    // If fast forward portion is over, count direct calls
-    INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-    INS_InsertThenPredicatedCall(ins, IPOINT_BEFORE,
-                                 (AFUNPTR)CountDirectCalls, IARG_UINT32,
-                                 INS_IsDirectCall(ins), IARG_END);
-
-    // If fast forward portion is over, count
-    INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-    INS_InsertThenPredicatedCall(ins, IPOINT_BEFORE,
-                                 (AFUNPTR)CountDirectCalls, IARG_UINT32,
-                                 INS_IsDirectCall(ins), IARG_END);
+                                 IARG_UINT32, INS_Category(ins),
+                                 IARG_UINT32, INS_IsDirectCall(ins), IARG_END);
 
     UINT32 memOperands = INS_MemoryOperandCount(ins);
     for (UINT32 memOp = 0; memOp < memOperands; memOp++) {
