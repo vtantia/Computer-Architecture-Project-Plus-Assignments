@@ -14,7 +14,7 @@ UINT64 insCount = 0; // number of dynamically executed instructions
 UINT64 bblCount = 0; // number of dynamically executed basic blocks
 
 UINT64 fast_forward_count = 30;
-UINT64 run_inst_count = 100;
+UINT64 run_inst_count = 1000000000;
 // UINT64 checkedIns = 0;
 
 UINT64 insCountAnalyzed = 0;
@@ -70,30 +70,24 @@ ADDRINT FastForward(void) {
 // Analysis routines
 /* ===================================================================== */
 
-VOID Analysis(UINT32 category, UINT32 isDirect, UINT32 size, ADDRINT addr,
-              BOOL pred) {
-  insCountAnalyzed += pred;
-  catCounts[category] += pred;
+VOID Analysis(UINT32 category, UINT32 isDirect) {
+  insCountAnalyzed++;
+  catCounts[category]++;
   cntDirect += (category == XED_CATEGORY_CALL) && isDirect;
-  ArrayIns[(addr / 32)] =
-      MAX((addr + size - 1) / 32, ArrayIns[(addr / 32)]);
 }
 
-VOID CountBbl(UINT32 numInstInBbl) {
-  bblCount++;
-  insCount += numInstInBbl;
+VOID RecordInstrFootprint(ADDRINT arrayIndex, UINT32 numChunks) {
+  ArrayIns[arrayIndex] = numChunks;
 }
 
 VOID RecordMemLoadStore(UINT32 isRead, UINT32 isWrite, UINT32 size,
-                        ADDRINT addr, BOOL isMem) {
+                        ADDRINT arrayIndex, UINT32 numChunks) {
   cntLoad += (isRead * size + 3) / 4;
   cntStore += (isWrite * size + 3) / 4;
-  // cout << addr << " " << size << endl;
-  ArrayDat[(addr / 32) * isMem] =
-      MAX((addr + size - 1) / 32, isMem * ArrayDat[(addr / 32)]);
+  ArrayDat[arrayIndex] = numChunks;
 }
 
-VOID CountIns(UINT32 numInstInBbl) { insCount++; }
+VOID CountIns(UINT32 numInst) { insCount++; }
 
 /* ===================================================================== */
 // Instrumentation callbacks
@@ -102,28 +96,39 @@ VOID CountIns(UINT32 numInstInBbl) { insCount++; }
 VOID Instruction(INS ins, VOID *v) {
   INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)CountIns, IARG_END);
 
+  ADDRINT addr = INS_Address(ins);
+  UINT32 size = INS_Size(ins);
+  UINT32 chunkSize = MAX((addr + size - 1) / 32, ArrayIns[(addr / 32)]);
+
   // If fast forward portion is over, analyze
   INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-  INS_InsertThenCall(ins, IPOINT_BEFORE, (AFUNPTR)Analysis, IARG_UINT32,
-                     INS_Category(ins), IARG_UINT32, INS_IsDirectCall(ins),
-                     IARG_UINT32, INS_Size(ins), IARG_ADDRINT,
-                     INS_Address(ins), IARG_BOOL, INS_IsPredicated(ins),
+  INS_InsertThenPredicatedCall(ins, IPOINT_BEFORE, (AFUNPTR)Analysis,
+                               IARG_UINT32, INS_Category(ins), IARG_UINT32,
+                               INS_IsDirectCall(ins), IARG_END);
+
+  INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+  INS_InsertThenCall(ins, IPOINT_BEFORE, (AFUNPTR)RecordInstrFootprint,
+                     IARG_ADDRINT, (addr / 32), IARG_UINT32, chunkSize,
                      IARG_END);
 
   UINT32 memOperands = INS_MemoryOperandCount(ins);
   for (UINT32 memOp = 0; memOp < memOperands; memOp++) {
-    ADDRINT addr = (INS_OperandMemoryBaseReg(ins, memOp) +
-                    INS_OperandMemoryDisplacement(ins, memOp) +
-                    INS_OperandMemoryIndexReg(ins, memOp) *
-                        INS_OperandMemoryScale(ins, memOp)) /
-                   8;
+
+    addr = (INS_OperandMemoryBaseReg(ins, memOp) +
+            INS_OperandMemoryDisplacement(ins, memOp) +
+            INS_OperandMemoryIndexReg(ins, memOp) *
+                INS_OperandMemoryScale(ins, memOp));
+
+    size = INS_MemoryOperandSize(ins, memOp);
+    chunkSize = MAX((addr + size - 1) / 32, ArrayIns[(addr / 32)]);
+
     INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
     INS_InsertThenPredicatedCall(
         ins, IPOINT_BEFORE, (AFUNPTR)RecordMemLoadStore, IARG_UINT32,
         INS_MemoryOperandIsRead(ins, memOp), IARG_UINT32,
-        INS_MemoryOperandIsWritten(ins, memOp), IARG_UINT32,
-        INS_MemoryOperandSize(ins, memOp), IARG_ADDRINT, addr, IARG_BOOL,
-        INS_OperandIsMemory(ins, memOp), IARG_END);
+        INS_MemoryOperandIsWritten(ins, memOp), IARG_UINT32, size,
+        IARG_ADDRINT, (addr / 32 * INS_OperandIsMemory(ins, memOp)),
+        IARG_UINT32, chunkSize, IARG_END);
   }
 
   // If termination region, then exit
