@@ -96,9 +96,9 @@ VOID Instruction(INS ins, VOID *v) {
 
     // If fast forward portion is over, analyze
     INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-    INS_InsertThenPredicatedCall(ins, IPOINT_BEFORE, (AFUNPTR)Analysis,
-                                 IARG_UINT32, INS_Category(ins),
-                                 IARG_UINT32, INS_IsDirectCall(ins), IARG_END);
+    INS_InsertThenPredicatedCall(
+        ins, IPOINT_BEFORE, (AFUNPTR)Analysis, IARG_UINT32,
+        INS_Category(ins), IARG_UINT32, INS_IsDirectCall(ins), IARG_END);
 
     UINT32 memOperands = INS_MemoryOperandCount(ins);
     for (UINT32 memOp = 0; memOp < memOperands; memOp++) {
@@ -107,14 +107,14 @@ VOID Instruction(INS ins, VOID *v) {
         INS_InsertThenPredicatedCall(
             ins, IPOINT_BEFORE, (AFUNPTR)RecordMemRead, IARG_UINT32,
             INS_MemoryOperandIsRead(ins, memOp), IARG_UINT32,
-            INS_MemoryOperandSize, IARG_END);
+            INS_MemoryOperandSize(ins, memOp), IARG_END);
 
         INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward,
                          IARG_END);
         INS_InsertThenPredicatedCall(
             ins, IPOINT_BEFORE, (AFUNPTR)RecordMemWrite, IARG_UINT32,
             INS_MemoryOperandIsWritten(ins, memOp), IARG_UINT32,
-            INS_MemoryOperandSize, IARG_END);
+            INS_MemoryOperandSize(ins, memOp), IARG_END);
     }
 
     // If termination region, then exit
