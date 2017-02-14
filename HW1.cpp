@@ -72,10 +72,8 @@ ADDRINT FastForward(void) {
 
 VOID Analysis(UINT32 category, UINT32 isDirect, UINT32 size, ADDRINT addr,
               BOOL pred) {
-  if (pred) {
-    insCountAnalyzed++;
-    catCounts[category]++;
-  }
+  insCountAnalyzed += pred;
+  catCounts[category] += pred;
   cntDirect += (category == XED_CATEGORY_CALL) && isDirect;
   ArrayIns[(addr / 32)] =
       MAX((addr + size - 1) / 32, ArrayIns[(addr / 32)]);
