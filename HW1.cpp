@@ -2,7 +2,7 @@
 #include "xed-category-enum.h"
 #include <fstream>
 #include <iostream>
-#define SIZE ((1 << 24) + 1)
+#define SIZE ((1 << 27) + 1)
 
 void Exit();
 
@@ -23,6 +23,7 @@ UINT64 cntInsPrinted = 0;
 
 UINT64 catCounts[100] = {0};
 UINT64 cntDirect = 0;
+UINT64 cntIndirect = 0;
 UINT64 cntLoad = 0;
 UINT64 cntStore = 0;
 
@@ -70,17 +71,18 @@ ADDRINT FastForward(void) {
 // Analysis routines
 /* ===================================================================== */
 
-VOID Analysis(UINT32 category, UINT32 isDirect) {
+VOID Analysis(UINT32 category, BOOL isDirect) {
   insCountAnalyzed++;
   catCounts[category]++;
-  cntDirect += (category == XED_CATEGORY_CALL) && isDirect;
+  cntDirect += ((category == XED_CATEGORY_CALL) && isDirect);
+  cntIndirect += ((category == XED_CATEGORY_CALL) && !isDirect);
 }
 
 VOID RecordInstrFootprint(ADDRINT arrayIndex, UINT32 numChunks) {
   ArrayIns[arrayIndex] = numChunks;
 }
 
-VOID RecordMemLoadStore(UINT32 isRead, UINT32 isWrite, UINT32 size,
+VOID RecordMemLoadStore(BOOL isRead, BOOL isWrite, UINT32 size,
                         ADDRINT arrayIndex, UINT32 numChunks) {
   cntLoad += (isRead * size + 3) / 4;
   cntStore += (isWrite * size + 3) / 4;
@@ -103,7 +105,7 @@ VOID Instruction(INS ins, VOID *v) {
   // If fast forward portion is over, analyze
   INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
   INS_InsertThenPredicatedCall(ins, IPOINT_BEFORE, (AFUNPTR)Analysis,
-                               IARG_UINT32, INS_Category(ins), IARG_UINT32,
+                               IARG_UINT32, INS_Category(ins), IARG_BOOL,
                                INS_IsDirectCall(ins), IARG_END);
 
   INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
@@ -124,8 +126,8 @@ VOID Instruction(INS ins, VOID *v) {
 
     INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
     INS_InsertThenPredicatedCall(
-        ins, IPOINT_BEFORE, (AFUNPTR)RecordMemLoadStore, IARG_UINT32,
-        INS_MemoryOperandIsRead(ins, memOp), IARG_UINT32,
+        ins, IPOINT_BEFORE, (AFUNPTR)RecordMemLoadStore, IARG_BOOL,
+        INS_MemoryOperandIsRead(ins, memOp), IARG_BOOL,
         INS_MemoryOperandIsWritten(ins, memOp), IARG_UINT32, size,
         IARG_ADDRINT, (addr / 32 * INS_OperandIsMemory(ins, memOp)),
         IARG_UINT32, chunkSize, IARG_END);
@@ -148,7 +150,10 @@ void outputInstructionCounts() {
   printStats("Store", cntStore);
   printStats("NOP", catCounts[XED_CATEGORY_NOP]);
   printStats("Direct call", cntDirect);
-  printStats("Indirect call", catCounts[XED_CATEGORY_CALL] - cntDirect);
+  printStats("Indirect call", cntIndirect);
+  *out << "Test: " << cntDirect << "+" << cntIndirect << " should be "
+       << catCounts[XED_CATEGORY_CALL] << " and is "
+       << cntDirect + cntIndirect << endl;
   printStats("Return", catCounts[XED_CATEGORY_RET]);
   printStats("Unconditional branche", catCounts[XED_CATEGORY_UNCOND_BR]);
   printStats("Conditional branche", catCounts[XED_CATEGORY_COND_BR]);
