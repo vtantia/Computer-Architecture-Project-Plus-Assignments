@@ -112,8 +112,7 @@ VOID RecordInstrFootprint(ADDRINT arrayIndex, UINT32 numChunks,
 }
 
 VOID RecordMemLoadStore(BOOL isRead, BOOL isWrite, UINT32 size,
-                        ADDRINT addr, ADDRDELTA displ, BOOL isImmed,
-                        INT32 sizeImmed) {
+                        ADDRINT addr, ADDRDELTA displ) {
   cntLoad += (isRead * size + 3) / 4;
   cntStore += (isWrite * size + 3) / 4;
   ArrayDat[(addr / 32) * (isRead || isWrite)] =
@@ -121,22 +120,23 @@ VOID RecordMemLoadStore(BOOL isRead, BOOL isWrite, UINT32 size,
 
   maxDispl = MAX(displ, maxDispl);
   minDispl = MIN(displ, minDispl);
-
-  maxImmed = MAX(maxImmed, isImmed * sizeImmed);
-  minImmed = MIN(minImmed, isImmed == true ? sizeImmed : INT32_MAX);
 }
 
-VOID FindMemoryUsageOfInstr(BOOL isRead, UINT32 readSize, BOOL isWrite,
-                            UINT32 writeSize, UINT32 numMemReadOp,
-                            UINT32 numMemWriteOp) {
+VOID UpdateImmediateMaxMin(INT32 sizeImmed) {
+  maxImmed = MAX(maxImmed, sizeImmed);
+  minImmed = MIN(minImmed, sizeImmed);
+}
+
+VOID FindMemoryUsageOfInstr(USIZE readSize, UINT32 writeSize,
+                            UINT32 numMemReadOp, UINT32 numMemWriteOp) {
   numMemOps[numMemReadOp + numMemWriteOp]++;
   numMemReadOps[numMemReadOp]++;
   numMemWriteOps[numMemWriteOp]++;
 
-  UINT32 bytes = (isRead * readSize + isWrite * writeSize);
+  UINT32 bytes = (readSize + writeSize);
   maxBytes = MAX(bytes, maxBytes);
   totalBytes += bytes;
-  numMemIns += (isRead || isWrite);
+  numMemIns += (bytes > 0);
 }
 
 VOID CountIns(UINT32 numInst) { insCount++; }
@@ -178,17 +178,32 @@ VOID Instruction(INS ins, VOID *v) {
         INS_MemoryOperandIsRead(ins, memOp), IARG_BOOL,
         INS_MemoryOperandIsWritten(ins, memOp), IARG_UINT32,
         INS_MemoryOperandSize(ins, memOp), IARG_MEMORYOP_EA, memOp,
-        IARG_ADDRINT, INS_OperandMemoryDisplacement(ins, memOp), IARG_BOOL,
-        INS_OperandIsImmediate(ins, memOp), IARG_ADDRINT,
-        INS_OperandImmediate(ins, memOp), IARG_END);
+        IARG_ADDRINT, INS_OperandMemoryDisplacement(ins, memOp), IARG_END);
+
+    // This has to be done for all instructions, not just predicated
+    // Thus, a new IfThen call
+    if (INS_OperandIsImmediate(ins, memOp)) {
+      INT32 kk = INS_OperandImmediate(ins, memOp);
+      INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+      INS_InsertThenCall(ins, IPOINT_BEFORE,
+                         (AFUNPTR)UpdateImmediateMaxMin, IARG_ADDRINT, kk,
+                         IARG_END);
+    }
   }
 
+  UINT32 mrs = 0, mws = 0;
+  if (INS_IsMemoryRead(ins)) {
+    mrs = INS_MemoryReadSize(ins);
+  }
+  if (INS_IsMemoryWrite(ins)) {
+    mws = INS_MemoryWriteSize(ins);
+  }
+
+  // No need to pass IsMemoryRead/Write. It was only needed to zero out
   INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
   INS_InsertThenPredicatedCall(
-      ins, IPOINT_BEFORE, (AFUNPTR)FindMemoryUsageOfInstr, IARG_BOOL,
-      INS_IsMemoryRead(ins), IARG_UINT32, INS_MemoryReadSize(ins),
-      IARG_BOOL, INS_IsMemoryWrite(ins), IARG_UINT32,
-      INS_MemoryWriteSize(ins), IARG_UINT32, numMemReadOp, IARG_UINT32,
+      ins, IPOINT_BEFORE, (AFUNPTR)FindMemoryUsageOfInstr, IARG_UINT32,
+      mrs, IARG_UINT32, mws, IARG_UINT32, numMemReadOp, IARG_UINT32,
       numMemWriteOp, IARG_END);
 
   // If termination region, then exit
