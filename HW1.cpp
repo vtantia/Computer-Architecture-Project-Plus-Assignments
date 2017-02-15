@@ -160,11 +160,11 @@ VOID Instruction(INS ins, VOID *v) {
                                INS_IsDirectCall(ins), IARG_END);
 
   INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-  INS_InsertThenCall(ins, IPOINT_BEFORE, (AFUNPTR)RecordInstrFootprint,
-                     IARG_ADDRINT, (addr / 32), IARG_UINT32, chunkSize,
-                     IARG_UINT32, size, IARG_UINT32, INS_OperandCount(ins),
-                     IARG_UINT32, INS_MaxNumRRegs(ins), IARG_UINT32,
-                     INS_MaxNumWRegs(ins), IARG_END);
+  INS_InsertThenCall(
+      ins, IPOINT_BEFORE, (AFUNPTR)RecordInstrFootprint, IARG_ADDRINT,
+      (addr / 32), IARG_UINT32, chunkSize, IARG_UINT32, size, IARG_UINT32,
+      INS_MemoryOperandCount(ins), IARG_UINT32, INS_MaxNumRRegs(ins),
+      IARG_UINT32, INS_MaxNumWRegs(ins), IARG_END);
 
   UINT32 numMemReadOp = 0, numMemWriteOp = 0;
   for (UINT32 memOp = 0; memOp < memOperands; memOp++) {
@@ -179,11 +179,14 @@ VOID Instruction(INS ins, VOID *v) {
         INS_MemoryOperandIsWritten(ins, memOp), IARG_UINT32,
         INS_MemoryOperandSize(ins, memOp), IARG_MEMORYOP_EA, memOp,
         IARG_ADDRINT, INS_OperandMemoryDisplacement(ins, memOp), IARG_END);
+  }
 
+  UINT32 totalOperands = INS_OperandCount(ins);
+  for (UINT32 opNum = 0; opNum < totalOperands; opNum++) {
     // This has to be done for all instructions, not just predicated
     // Thus, a new IfThen call
-    if (INS_OperandIsImmediate(ins, memOp)) {
-      INT32 kk = INS_OperandImmediate(ins, memOp);
+    if (INS_OperandIsImmediate(ins, opNum)) {
+      INT32 kk = INS_OperandImmediate(ins, opNum);
       INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
       INS_InsertThenCall(ins, IPOINT_BEFORE,
                          (AFUNPTR)UpdateImmediateMaxMin, IARG_ADDRINT, kk,
@@ -253,10 +256,10 @@ void printD(string str, UINT64 *arr) {
   *out << str << endl;
   for (int i = 0; i < SIZED; i++) {
     if (arr[i] != 0) {
-      cout << i << ": " << arr[i] << endl;
+      *out << i << ": " << arr[i] << endl;
     }
   }
-  cout << endl;
+  *out << endl;
 }
 
 void outputPartD() {
