@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #define SIZE ((1 << 27) + 1)
+#define SIZED 200
 
 void Exit();
 
@@ -27,10 +28,26 @@ UINT64 cntIndirect = 0;
 UINT64 cntLoad = 0;
 UINT64 cntStore = 0;
 
-UINT64 insLens[20];
-UINT64 numOps[20];
-UINT64 numReadOps[20];
-UINT64 numWriteOps[20];
+UINT64 numMemReadOp = 0;
+UINT64 numMemWriteOp = 0;
+
+UINT64 maxBytes = 0;
+UINT64 totalBytes = 0;
+UINT64 avgBytes = 0;
+UINT64 numMemIns = 0;
+
+INT32 maxImmed = 0;
+INT32 minImmed = INT32_MAX;
+ADDRDELTA maxDispl = 0;
+ADDRDELTA minDispl = INT32_MAX; //#TODO not sure
+
+UINT64 insLens[SIZED];
+UINT64 numOps[SIZED];
+UINT64 numReadOps[SIZED];
+UINT64 numWriteOps[SIZED];
+UINT64 numMemOps[SIZED];
+UINT64 numMemReadOps[SIZED];
+UINT64 numMemWriteOps[SIZED];
 
 std::ostream *out = &cerr;
 
@@ -81,25 +98,49 @@ VOID Analysis(UINT32 category, BOOL isDirect) {
   catCounts[category]++;
   cntDirect += ((category == XED_CATEGORY_CALL) && isDirect);
   cntIndirect += ((category == XED_CATEGORY_CALL) && !isDirect);
+
+  numMemReadOp = numMemWriteOp = numMemBytes = 0;
 }
 
 VOID RecordInstrFootprint(ADDRINT arrayIndex, UINT32 numChunks,
                           UINT32 size, UINT32 numOp, UINT32 numReadOp,
-                          UINT32 numWriteOp) {
+                          UINT32 numWriteOp, BOOL isImmed,
+                          INT32 sizeImmed) {
   ArrayIns[arrayIndex] = numChunks;
 
-  insLengths[size]++;
+  insLens[size]++;
   numOps[numOp]++;
   numReadOps[numReadOp]++;
   numWriteOps[numWriteOp]++;
+
+  INT32 maxImmed = MAX(maxImmed, isImmed * sizeImmed);
+  INT32 minImmed = MIN(minImmed, isImmed * sizeImmed);
 }
 
 VOID RecordMemLoadStore(BOOL isRead, BOOL isWrite, UINT32 size,
-                        ADDRINT addr) {
+                        ADDRINT addr, ADDRDELTA displ) {
   cntLoad += (isRead * size + 3) / 4;
   cntStore += (isWrite * size + 3) / 4;
   ArrayDat[(addr / 32) * (isRead || isWrite)] =
       MAX((addr + size - 1) / 32, ArrayIns[(addr / 32)]);
+
+  numMemReadOp += isRead;
+  numMemWriteOp += isWrite;
+
+  maxDispl = MAX(displ, maxDispl);
+  minDispl = MIN(displ, maxDispl);
+}
+
+VOID FindMemoryOperands(BOOL isRead, UINT32 readSize, BOOL isWrite,
+                        UINT32 writeSize) {
+  numMemOps[numMemReadOp + numMemWriteOp]++;
+  numMemReadOps[numMemReadOp]++;
+  numMemWriteOps[numMemWriteOp]++;
+
+  UINT32 bytes = (isRead || isWrite) * (readSize + writeSize);
+  maxBytes = MAX(bytes, maxBytes);
+  totalBytes += bytes;
+  numMemIns += (isRead || isWrite);
 }
 
 VOID CountIns(UINT32 numInst) { insCount++; }
@@ -114,6 +155,7 @@ VOID Instruction(INS ins, VOID *v) {
   ADDRINT addr = INS_Address(ins);
   UINT32 size = INS_Size(ins);
   UINT32 chunkSize = MAX((addr + size - 1) / 32, ArrayIns[(addr / 32)]);
+  UINT32 memOperands = INS_MemoryOperandCount(ins);
 
   // If fast forward portion is over, analyze
   INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
@@ -124,11 +166,12 @@ VOID Instruction(INS ins, VOID *v) {
   INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
   INS_InsertThenCall(ins, IPOINT_BEFORE, (AFUNPTR)RecordInstrFootprint,
                      IARG_ADDRINT, (addr / 32), IARG_UINT32, chunkSize,
-                     IARG_UINT32, size, IARG_UINT32, Ins_OperandCount(ins),
+                     IARG_UINT32, size, IARG_UINT32, INS_OperandCount(ins),
                      IARG_UINT32, INS_MaxNumRRegs(ins), IARG_UINT32,
-                     INS_MaxNumWRegs(ins), IARG_END);
+                     INS_MaxNumWRegs(ins), IARG_BOOL,
+                     INS_OperandIsImmediate(ins), IARG_ADDRINT,
+                     INS_OperandImmediate(ins), IARG_END);
 
-  UINT32 memOperands = INS_MemoryOperandCount(ins);
   for (UINT32 memOp = 0; memOp < memOperands; memOp++) {
 
     INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
@@ -136,8 +179,16 @@ VOID Instruction(INS ins, VOID *v) {
         ins, IPOINT_BEFORE, (AFUNPTR)RecordMemLoadStore, IARG_BOOL,
         INS_MemoryOperandIsRead(ins, memOp), IARG_BOOL,
         INS_MemoryOperandIsWritten(ins, memOp), IARG_UINT32, size,
-        IARG_MEMORYOP_EA, memOp, IARG_END);
+        IARG_MEMORYOP_EA, memOp, IARG_ADDRINT,
+        INS_OperandMemoryDisplacement(ins, memOp), IARG_END);
   }
+
+  INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+  INS_InsertThenPredicatedCall(
+      ins, IPOINT_BEFORE, (AFUNPTR)FindMemoryOperands, IARG_BOOL,
+      INS_IsMemoryRead(ins), IARG_UINT32, INS_MemoryReadSize(ins),
+      IARG_BOOL, INS_IsMemoryWrite(ins), IARG_UINT32,
+      INS_MemoryWriteSize(ins), IARG_END);
 
   // If termination region, then exit
   INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)Terminate, IARG_END);
@@ -182,6 +233,43 @@ void outputInstructionCounts() {
        << endl;
 }
 
+void printD(string str, UINT64 *arr) {
+  *out << str << endl;
+  for (int i = 0; i < SIZED; i++) {
+    if (arr[i] != 0) {
+      cout << i << ": " << arr[i] << endl;
+    }
+  }
+  cout << endl;
+}
+
+void outputPartD() {
+  printD("1. Distribution of instruction length: ", insLens);
+  printD("2. Distribution of the number of operands in an instruction: ",
+         numOps);
+  printD("3. Distribution of the number of register read operands in an "
+         "instruction: ",
+         numReadOps);
+  printD("4. Distribution of the number of register write operands in an "
+         "instruction: ",
+         numWriteOps);
+  printD("5. Distribution of the number of memory operands in an "
+         "instruction: ",
+         numMemOps);
+  printD("6. Distribution of the number of memory read operands in an "
+         "instruction: ",
+         numMemReadOps);
+  printD("7. Distribution of the number of memory write operands in an "
+         "instruction: ",
+         numMemWriteOps);
+  *out << "8. Max bytes touched: " << maxBytes
+       << ", average: " << totalBytes / numMemIns << endl;
+  *out << "9. Max immediate field: " << maxImmed
+       << ", min immediate field: " << minImmed << endl;
+  *out << "10. Max displacement field: " << maxDispl
+       << ", min displacement field: " << minDispl << endl;
+}
+
 UINT64 findChunks(UINT64 *arr) {
   UINT64 i = 0;
   UINT64 cnt = 0;
@@ -224,6 +312,8 @@ void Exit() {
        << findChunks(ArrayIns) << endl;
   *out << "Data footprint: (in multiples of 32 bytes): "
        << findChunks(ArrayDat) << endl;
+
+  outputPartD();
 
   exit(0);
 }
