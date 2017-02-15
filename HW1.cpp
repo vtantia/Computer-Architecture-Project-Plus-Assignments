@@ -83,10 +83,11 @@ VOID RecordInstrFootprint(ADDRINT arrayIndex, UINT32 numChunks) {
 }
 
 VOID RecordMemLoadStore(BOOL isRead, BOOL isWrite, UINT32 size,
-                        ADDRINT arrayIndex, UINT32 numChunks) {
+                        ADDRINT addr) {
   cntLoad += (isRead * size + 3) / 4;
   cntStore += (isWrite * size + 3) / 4;
-  ArrayDat[arrayIndex] = numChunks;
+  ArrayDat[(addr / 32) * (isRead || isWrite)] =
+      MAX((addr + size - 1) / 32, ArrayIns[(addr / 32)]);
 }
 
 VOID CountIns(UINT32 numInst) { insCount++; }
@@ -116,21 +117,12 @@ VOID Instruction(INS ins, VOID *v) {
   UINT32 memOperands = INS_MemoryOperandCount(ins);
   for (UINT32 memOp = 0; memOp < memOperands; memOp++) {
 
-    addr = (INS_OperandMemoryBaseReg(ins, memOp) +
-            INS_OperandMemoryDisplacement(ins, memOp) +
-            INS_OperandMemoryIndexReg(ins, memOp) *
-                INS_OperandMemoryScale(ins, memOp));
-
-    size = INS_MemoryOperandSize(ins, memOp);
-    chunkSize = MAX((addr + size - 1) / 32, ArrayIns[(addr / 32)]);
-
     INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
     INS_InsertThenPredicatedCall(
         ins, IPOINT_BEFORE, (AFUNPTR)RecordMemLoadStore, IARG_BOOL,
         INS_MemoryOperandIsRead(ins, memOp), IARG_BOOL,
         INS_MemoryOperandIsWritten(ins, memOp), IARG_UINT32, size,
-        IARG_ADDRINT, (addr / 32 * INS_OperandIsMemory(ins, memOp)),
-        IARG_UINT32, chunkSize, IARG_END);
+        IARG_MEMORYOP_EA, memOp, IARG_END);
   }
 
   // If termination region, then exit
@@ -214,10 +206,10 @@ void Exit() {
 
   *out << endl;
   *out << endl;
-  *out << "Instruction footprint: (multiples of 32): "
+  *out << "Instruction footprint: (in multiples of 32 bytes): "
        << findChunks(ArrayIns) << endl;
-  *out << "Data footprint: (multiples of 32): " << findChunks(ArrayDat)
-       << endl;
+  *out << "Data footprint: (in multiples of 32 bytes): "
+       << findChunks(ArrayDat) << endl;
 
   exit(0);
 }
