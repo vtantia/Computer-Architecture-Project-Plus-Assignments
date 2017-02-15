@@ -36,9 +36,9 @@ UINT64 totalBytes = 0;
 UINT64 avgBytes = 0;
 UINT64 numMemIns = 0;
 
-INT32 maxImmed = 0;
+INT32 maxImmed = INT32_MIN;
 INT32 minImmed = INT32_MAX;
-ADDRDELTA maxDispl = 0;
+ADDRDELTA maxDispl = INT32_MIN;
 ADDRDELTA minDispl = INT32_MAX; // Only for ia32 arch target
 
 UINT64 insLens[SIZED];
