@@ -176,9 +176,9 @@ VOID Instruction(INS ins, VOID *v) {
     INS_InsertThenPredicatedCall(
         ins, IPOINT_BEFORE, (AFUNPTR)RecordMemLoadStore, IARG_BOOL,
         INS_MemoryOperandIsRead(ins, memOp), IARG_BOOL,
-        INS_MemoryOperandIsWritten(ins, memOp), IARG_UINT32, size,
-        IARG_MEMORYOP_EA, memOp, IARG_ADDRINT,
-        INS_OperandMemoryDisplacement(ins, memOp), IARG_BOOL,
+        INS_MemoryOperandIsWritten(ins, memOp), IARG_UINT32,
+        INS_MemoryOperandSize(ins, memOp), IARG_MEMORYOP_EA, memOp,
+        IARG_ADDRINT, INS_OperandMemoryDisplacement(ins, memOp), IARG_BOOL,
         INS_OperandIsImmediate(ins, memOp), IARG_ADDRINT,
         INS_OperandImmediate(ins, memOp), IARG_END);
   }
