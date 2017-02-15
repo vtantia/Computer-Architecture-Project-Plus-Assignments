@@ -133,7 +133,7 @@ VOID FindMemoryUsageOfInstr(BOOL isRead, UINT32 readSize, BOOL isWrite,
   numMemReadOps[numMemReadOp]++;
   numMemWriteOps[numMemWriteOp]++;
 
-  UINT32 bytes = (isRead || isWrite) * (readSize + writeSize);
+  UINT32 bytes = (isRead * readSize + isWrite * writeSize);
   maxBytes = MAX(bytes, maxBytes);
   totalBytes += bytes;
   numMemIns += (isRead || isWrite);
@@ -179,17 +179,17 @@ VOID Instruction(INS ins, VOID *v) {
         INS_MemoryOperandIsWritten(ins, memOp), IARG_UINT32, size,
         IARG_MEMORYOP_EA, memOp, IARG_ADDRINT,
         INS_OperandMemoryDisplacement(ins, memOp), IARG_BOOL,
-        INS_OperandIsImmediate(ins), IARG_ADDRINT,
-        INS_OperandImmediate(ins), IARG_END);
+        INS_OperandIsImmediate(ins, memOp), IARG_ADDRINT,
+        INS_OperandImmediate(ins, memOp), IARG_END);
   }
 
   INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
   INS_InsertThenPredicatedCall(
-      ins, IPOINT_BEFORE, (AFUNPTR)FindMemoryUsageOfInstructions,
-      IARG_BOOL, INS_IsMemoryRead(ins), IARG_UINT32,
-      INS_MemoryReadSize(ins), IARG_BOOL, INS_IsMemoryWrite(ins),
-      IARG_UINT32, INS_MemoryWriteSize(ins), IARG_UINT32, numMemReadOp,
-      IARG_UINT32, numMemWriteOp, IARG_END);
+      ins, IPOINT_BEFORE, (AFUNPTR)FindMemoryUsageOfInstr, IARG_BOOL,
+      INS_IsMemoryRead(ins), IARG_UINT32, INS_MemoryReadSize(ins),
+      IARG_BOOL, INS_IsMemoryWrite(ins), IARG_UINT32,
+      INS_MemoryWriteSize(ins), IARG_UINT32, numMemReadOp, IARG_UINT32,
+      numMemWriteOp, IARG_END);
 
   // If termination region, then exit
   INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)Terminate, IARG_END);
