@@ -27,6 +27,11 @@ UINT64 cntIndirect = 0;
 UINT64 cntLoad = 0;
 UINT64 cntStore = 0;
 
+UINT64 insLens[20];
+UINT64 numOps[20];
+UINT64 numReadOps[20];
+UINT64 numWriteOps[20];
+
 std::ostream *out = &cerr;
 
 static UINT64 ArrayIns[SIZE] = {0};
@@ -78,8 +83,15 @@ VOID Analysis(UINT32 category, BOOL isDirect) {
   cntIndirect += ((category == XED_CATEGORY_CALL) && !isDirect);
 }
 
-VOID RecordInstrFootprint(ADDRINT arrayIndex, UINT32 numChunks) {
+VOID RecordInstrFootprint(ADDRINT arrayIndex, UINT32 numChunks,
+                          UINT32 size, UINT32 numOp, UINT32 numReadOp,
+                          UINT32 numWriteOp) {
   ArrayIns[arrayIndex] = numChunks;
+
+  insLengths[size]++;
+  numOps[numOp]++;
+  numReadOps[numReadOp]++;
+  numWriteOps[numWriteOp]++;
 }
 
 VOID RecordMemLoadStore(BOOL isRead, BOOL isWrite, UINT32 size,
@@ -112,7 +124,9 @@ VOID Instruction(INS ins, VOID *v) {
   INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
   INS_InsertThenCall(ins, IPOINT_BEFORE, (AFUNPTR)RecordInstrFootprint,
                      IARG_ADDRINT, (addr / 32), IARG_UINT32, chunkSize,
-                     IARG_END);
+                     IARG_UINT32, size, IARG_UINT32, Ins_OperandCount(ins),
+                     IARG_UINT32, INS_MaxNumRRegs(ins), IARG_UINT32,
+                     INS_MaxNumWRegs(ins), IARG_END);
 
   UINT32 memOperands = INS_MemoryOperandCount(ins);
   for (UINT32 memOp = 0; memOp < memOperands; memOp++) {
