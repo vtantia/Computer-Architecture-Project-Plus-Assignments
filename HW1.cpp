@@ -12,7 +12,6 @@ void Exit();
 /* ================================================================== */
 
 UINT64 insCount = 0; // number of dynamically executed instructions
-UINT64 bblCount = 0; // number of dynamically executed basic blocks
 
 UINT64 fast_forward_count = 30;
 UINT64 run_inst_count = 1000000000;
@@ -24,7 +23,7 @@ UINT64 cntInsPrinted = 0;
 
 UINT64 catCounts[100] = {0};
 UINT64 cntDirect = 0;
-UINT64 cntIndirect = 0;
+// UINT64 cntIndirect = 0;
 UINT64 cntLoad = 0;
 UINT64 cntStore = 0;
 
@@ -85,9 +84,7 @@ ADDRINT Terminate(void) {
 }
 
 // Analysis routine to check fast-forward condition
-ADDRINT FastForward(void) {
-  return (insCount >= fast_forward_count && insCount);
-}
+ADDRINT FastForward(void) { return (insCount >= fast_forward_count); }
 
 /* ===================================================================== */
 // Analysis routines
@@ -97,7 +94,6 @@ VOID Analysis(UINT32 category, BOOL isDirect) {
   insCountAnalyzed++;
   catCounts[category]++;
   cntDirect += ((category == XED_CATEGORY_CALL) && isDirect);
-  cntIndirect += ((category == XED_CATEGORY_CALL) && !isDirect);
 }
 
 VOID RecordInstrFootprint(ADDRINT arrayIndex, UINT32 numChunks,
@@ -139,14 +135,14 @@ VOID FindMemoryUsageOfInstr(USIZE readSize, UINT32 writeSize,
   numMemIns += (bytes > 0);
 }
 
-VOID CountIns(UINT32 numInst) { insCount++; }
+// VOID CountIns(UINT32 numInst) { insCount++; }
 
 /* ===================================================================== */
 // Instrumentation callbacks
 /* ===================================================================== */
 
 VOID Instruction(INS ins, VOID *v) {
-  INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)CountIns, IARG_END);
+  // INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)CountIns, IARG_END);
 
   ADDRINT addr = INS_Address(ins);
   UINT32 size = INS_Size(ins);
@@ -214,6 +210,16 @@ VOID Instruction(INS ins, VOID *v) {
   INS_InsertThenCall(ins, IPOINT_BEFORE, (AFUNPTR)Exit, IARG_END);
 }
 
+VOID CountBbl(UINT32 numInstInBbl) { insCount += numInstInBbl; }
+
+VOID Trace(TRACE trace, VOID *v) {
+  for (BBL bbl = TRACE_BblHead(trace); BBL_Valid(bbl);
+       bbl = BBL_Next(bbl)) {
+    BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)CountBbl, IARG_UINT32,
+                   BBL_NumIns(bbl), IARG_END);
+  }
+}
+
 void printStats(string str, UINT64 cnt) {
   cntInsPrinted += cnt;
 
@@ -226,10 +232,10 @@ void outputInstructionCounts() {
   printStats("Store", cntStore);
   printStats("NOP", catCounts[XED_CATEGORY_NOP]);
   printStats("Direct call", cntDirect);
-  printStats("Indirect call", cntIndirect);
-  *out << "Test: " << cntDirect << "+" << cntIndirect << " should be "
-       << catCounts[XED_CATEGORY_CALL] << " and is "
-       << cntDirect + cntIndirect << endl;
+  printStats("Indirect call", catCounts[XED_CATEGORY_CALL] - cntDirect);
+  //*out << "Test: " << cntDirect << "+" << cntIndirect << " should be "
+  //<< catCounts[XED_CATEGORY_CALL] << " and is "
+  //<< cntDirect + cntIndirect << endl;
   printStats("Return", catCounts[XED_CATEGORY_RET]);
   printStats("Unconditional branche", catCounts[XED_CATEGORY_UNCOND_BR]);
   printStats("Conditional branche", catCounts[XED_CATEGORY_COND_BR]);
@@ -355,6 +361,7 @@ int main(int argc, char *argv[]) {
 
   if (KnobCount) {
     INS_AddInstrumentFunction(Instruction, 0);
+    TRACE_AddInstrumentFunction(Trace, 0);
     PIN_AddFiniFunction(Fini, 0);
   }
 
