@@ -124,8 +124,9 @@ VOID UpdateImmediateMaxMin(INT32 sizeImmed) {
 }
 
 VOID FindMemoryUsageOfInstr(USIZE readSize, UINT32 writeSize,
-                            UINT32 numMemReadOp, UINT32 numMemWriteOp) {
-  numMemOps[numMemReadOp + numMemWriteOp]++;
+                            UINT32 numMemReadOp, UINT32 numMemWriteOp,
+                            UINT32 memOperands) {
+  numMemOps[memOperands]++;
   numMemReadOps[numMemReadOp]++;
   numMemWriteOps[numMemWriteOp]++;
 
@@ -147,7 +148,9 @@ VOID Instruction(INS ins, VOID *v) {
   ADDRINT addr = INS_Address(ins);
   UINT32 size = INS_Size(ins);
   UINT32 chunkSize = MAX((addr + size - 1) / 32, ArrayIns[(addr / 32)]);
+
   UINT32 memOperands = INS_MemoryOperandCount(ins);
+  UINT32 totalOperands = INS_OperandCount(ins);
 
   // If fast forward portion is over, analyze
   INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
@@ -156,11 +159,11 @@ VOID Instruction(INS ins, VOID *v) {
                                INS_IsDirectCall(ins), IARG_END);
 
   INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-  INS_InsertThenCall(
-      ins, IPOINT_BEFORE, (AFUNPTR)RecordInstrFootprint, IARG_ADDRINT,
-      (addr / 32), IARG_UINT32, chunkSize, IARG_UINT32, size, IARG_UINT32,
-      INS_MemoryOperandCount(ins), IARG_UINT32, INS_MaxNumRRegs(ins),
-      IARG_UINT32, INS_MaxNumWRegs(ins), IARG_END);
+  INS_InsertThenCall(ins, IPOINT_BEFORE, (AFUNPTR)RecordInstrFootprint,
+                     IARG_ADDRINT, (addr / 32), IARG_UINT32, chunkSize,
+                     IARG_UINT32, size, IARG_UINT32, totalOperands,
+                     IARG_UINT32, INS_MaxNumRRegs(ins), IARG_UINT32,
+                     INS_MaxNumWRegs(ins), IARG_END);
 
   UINT32 numMemReadOp = 0, numMemWriteOp = 0;
   for (UINT32 memOp = 0; memOp < memOperands; memOp++) {
@@ -177,7 +180,6 @@ VOID Instruction(INS ins, VOID *v) {
         IARG_ADDRINT, INS_OperandMemoryDisplacement(ins, memOp), IARG_END);
   }
 
-  UINT32 totalOperands = INS_OperandCount(ins);
   for (UINT32 opNum = 0; opNum < totalOperands; opNum++) {
     // This has to be done for all instructions, not just predicated
     // Thus, a new IfThen call
@@ -203,7 +205,7 @@ VOID Instruction(INS ins, VOID *v) {
   INS_InsertThenPredicatedCall(
       ins, IPOINT_BEFORE, (AFUNPTR)FindMemoryUsageOfInstr, IARG_UINT32,
       mrs, IARG_UINT32, mws, IARG_UINT32, numMemReadOp, IARG_UINT32,
-      numMemWriteOp, IARG_END);
+      numMemWriteOp, IARG_UINT32, memOperands, IARG_END);
 
   // If termination region, then exit
   INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)Terminate, IARG_END);
