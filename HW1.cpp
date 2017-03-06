@@ -86,6 +86,9 @@ ADDRDELTA minDisplacement =
     0xFFFFFFFFLL; // minimum value of displacement in memory addressing
 
 UINT32 mispredFNBT = 0;
+UINT32 mispredBimod = 0;
+
+UINT32 bimod[512] = {0};
 
 /* Command line switches */
 KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool", "o", "",
@@ -137,11 +140,20 @@ VOID RecordIns(ADDRINT insAddr, UINT32 insSize, UINT32 opCount,
   addFootPrint(insFootPrint, insAddr, insSize);
 }
 
+VOID updateCount(UINT32 *toChange, BOOL isTaken, UINT32 limit) {
+  if (*toChange != limit && isTaken)
+    (*toChange)++;
+  else if (*toChange != 0 && !isTaken)
+    (*toChange)--;
+}
+
 VOID BranchPredFNBT(ADDRINT insAddr, ADDRINT bTargetAddr, BOOL isTaken) {
-  if ((bTargetAddr - insAddr) > 0)
-    mispredFNBT += isTaken;
-  else
-    mispredFNBT += !isTaken;
+  UINT32 index = (insAddr >> 2) % 512;
+
+  mispredFNBT += ((bTargetAddr - insAddr) > 0) ? isTaken : !isTaken;
+
+  mispredBimod += (bimod[index] < 2) ? isTaken : !isTaken;
+  updateCount(&bimod[index], isTaken, 3);
 }
 
 VOID RecordInsType0(INS_CATEGORY category) {
@@ -544,6 +556,7 @@ VOID Fini(INT32 code, VOID *v) {
   *out << "===============================================" << endl;
 
   *out << "Mispredictions in FNBT : " << mispredFNBT << endl;
+  *out << "Mispredictions in bimodal : " << mispredBimod << endl;
   *out << "===============================================" << endl;
 }
 
