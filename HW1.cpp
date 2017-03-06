@@ -85,6 +85,8 @@ ADDRDELTA maxDisplacement =
 ADDRDELTA minDisplacement =
     0xFFFFFFFFLL; // minimum value of displacement in memory addressing
 
+UINT32 mispredFNBT = 0;
+
 /* Command line switches */
 KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool", "o", "",
                             "specify file name for HW1 output");
@@ -133,6 +135,13 @@ VOID RecordIns(ADDRINT insAddr, UINT32 insSize, UINT32 opCount,
   if (minImm < minImmediate)
     minImmediate = minImm;
   addFootPrint(insFootPrint, insAddr, insSize);
+}
+
+VOID BranchPredFNBT(ADDRINT insAddr, ADDRINT bTargetAddr, BOOL isTaken) {
+  if ((bTargetAddr - insAddr) > 0)
+    mispredFNBT += isTaken;
+  else
+    mispredFNBT += !isTaken;
 }
 
 VOID RecordInsType0(INS_CATEGORY category) {
@@ -347,6 +356,9 @@ VOID StatDump(void) {
        << minDisplacement << endl;
   *out << "===============================================" << endl;
 
+  *out << "Mispredictions in FNBT : " << mispredFNBT << endl;
+  *out << "===============================================" << endl;
+
   exit(0);
 }
 
@@ -397,6 +409,16 @@ VOID Instruction(INS ins, VOID *v) {
       IARG_ADDRINT, maxImm, // instruction's maximum immediate value
       IARG_ADDRINT, minImm, // instruction's minimum immediate value
       IARG_END);
+
+  if (INS_IsDirectBranch(ins)) { // #TODO: Branch or BranchOrCall
+    INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+    INS_InsertThenCall(ins, IPOINT_BEFORE, (AFUNPTR)BranchPredFNBT,
+                       IARG_ADDRINT,
+                       INS_Address(ins),        // instruction address
+                       IARG_BRANCH_TARGET_ADDR, // branch target address
+                       IARG_BRANCH_TAKEN,       // if branch is taken
+                       IARG_END);
+  }
 
   /* Calculate instruction type */
   switch (INS_Category(ins)) {
@@ -590,6 +612,9 @@ VOID Fini(INT32 code, VOID *v) {
        << maxDisplacement << endl;
   *out << "Minimum value of displacement used in memory addressing : "
        << minDisplacement << endl;
+  *out << "===============================================" << endl;
+
+  *out << "Mispredictions in FNBT : " << mispredFNBT << endl;
   *out << "===============================================" << endl;
 }
 
