@@ -284,81 +284,10 @@ AFUNPTR RecordInsTypeFuncs[] = {
     AFUNPTR(RecordInsType2), AFUNPTR(RecordInsType3),
     AFUNPTR(RecordInsType4)};
 
+VOID Fini(INT32 code, VOID *v);
+
 VOID StatDump(void) {
-  double cycles = 0;
-  UINT64 totalIns = 0;
-
-  *out << "===============================================" << endl;
-  *out << "Instruction Type Results: " << endl;
-  for (UINT32 i = 0; i < INS_COUNT; i++) {
-    totalIns += insTypeCount[i];
-  }
-  for (UINT32 i = 0; i < INS_COUNT; i++) {
-    *out << insNames[i] << ": " << insTypeCount[i] << " ("
-         << (double)insTypeCount[i] / totalIns << ")" << endl;
-    if ((i == INS_LOAD) || (i == INS_STORE))
-      cycles += (80 * insTypeCount[i]);
-    else
-      cycles += insTypeCount[i];
-  }
-  *out << "CPI: " << cycles / totalIns << endl;
-
-  *out << endl;
-  *out << "Instruction Size Results: " << endl;
-  for (UINT32 i = 0; i < MAX_INS_SIZE; i++)
-    *out << i << " : " << insSizeCount[i] << endl;
-
-  *out << endl;
-  *out << "Memory Instruction Operand Results: " << endl;
-  for (UINT32 i = 0; i < MAX_MEM_OPS; i++)
-    *out << i << " : " << insMemOpCount[i] << endl;
-
-  *out << endl;
-  *out << "Memory Instruction Read Operand Results: " << endl;
-  for (UINT32 i = 0; i < MAX_MEM_OPS; i++)
-    *out << i << " : " << insMemReadOpCount[i] << endl;
-
-  *out << endl;
-  *out << "Memory Instruction Write Operand Results: " << endl;
-  for (UINT32 i = 0; i < MAX_MEM_OPS; i++)
-    *out << i << " : " << insMemWriteOpCount[i] << endl;
-
-  *out << endl;
-  *out << "Instruction Operand Results: " << endl;
-  for (UINT32 i = 0; i < MAX_INS_OPS; i++)
-    *out << i << " : " << insOpCount[i] << endl;
-
-  *out << endl;
-  *out << "Instruction Register Read Operand Results: " << endl;
-  for (UINT32 i = 0; i < MAX_INS_OPS; i++)
-    *out << i << " : " << insRegReadOpCount[i] << endl;
-
-  *out << endl;
-  *out << "Instruction Register Write Operand Results: " << endl;
-  for (UINT32 i = 0; i < MAX_INS_OPS; i++)
-    *out << i << " : " << insRegWriteOpCount[i] << endl;
-
-  *out << endl;
-  *out << "Instruction Blocks Accesses : " << insFootPrint.size() << endl;
-  *out << "Memory Blocks Accesses : " << memFootPrint.size() << endl;
-  *out << "Maximum number of bytes touched by an instruction : "
-       << maxBytesTouched << endl;
-  *out << "Average number of bytes touched by an instruction : "
-       << (double)totalBytesTouched /
-              (insMemOpCount[1] + insMemOpCount[2] + insMemOpCount[3] +
-               insMemOpCount[4])
-       << endl;
-  *out << "Maximum value of immediate : " << maxImmediate << endl;
-  *out << "Minimum value of immediate : " << minImmediate << endl;
-  *out << "Maximum value of displacement used in memory addressing : "
-       << maxDisplacement << endl;
-  *out << "Minimum value of displacement used in memory addressing : "
-       << minDisplacement << endl;
-  *out << "===============================================" << endl;
-
-  *out << "Mispredictions in FNBT : " << mispredFNBT << endl;
-  *out << "===============================================" << endl;
-
+  Fini(0, NULL);
   exit(0);
 }
 
