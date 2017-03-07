@@ -186,8 +186,8 @@ VOID IndirectPred(ADDRINT insAddr, ADDRINT nextInsAddr, ADDRINT targetAddr,
   missesBTB[btbIndex] += !found;
   if (!found && targetAddr != nextInsAddr) {
     mispredBTB[btbIndex] += 1;
-    btb[btbIndex][cacheIndex][toUpdate] = {true, insAddr, targetAddr,
-                                           lastTimeBTB[btbIndex]++};
+    btb[btbIndex][cacheIndex][toUpdate] =
+        (BtbEntry){true, insAddr, targetAddr, lastTimeBTB[btbIndex]++};
   }
 }
 
