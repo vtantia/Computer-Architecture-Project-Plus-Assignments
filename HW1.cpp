@@ -55,6 +55,8 @@ UINT32 mispredBTB[2] = {0};
 UINT64 lastTimeBTB[2] = {0};
 UINT32 btbHist = 0;
 BtbEntry btb[2][NUM_BTB][4];
+UINT32 totalpredBTB[2] = {0};
+UINT32 missesBTB[2] = {0};
 
 std::ostream *out = &cerr;
 
@@ -160,6 +162,7 @@ VOID IndirectPred(ADDRINT insAddr, ADDRINT nextInsAddr, ADDRINT targetAddr,
                   UINT32 cacheIndex, UINT32 btbIndex) {
   UINT32 invalidIndex = 4, lruIndex = 4;
   BOOL found = false;
+  totalpredBTB[btbIndex]++;
 
   for (UINT32 i = 0; i < 4; i++) {
     BtbEntry &b = btb[btbIndex][cacheIndex][i];
@@ -180,6 +183,7 @@ VOID IndirectPred(ADDRINT insAddr, ADDRINT nextInsAddr, ADDRINT targetAddr,
   }
 
   UINT32 toUpdate = (invalidIndex == 4) ? lruIndex : invalidIndex;
+  missesBTB[btbIndex] += !found;
   if (!found && targetAddr != nextInsAddr) {
     mispredBTB[btbIndex] += 1;
     btb[btbIndex][cacheIndex][toUpdate] = {true, insAddr, targetAddr,
@@ -258,6 +262,16 @@ VOID Trace(TRACE trace, VOID *v) {
   }
 }
 
+void outputBTB(UINT32 index) {
+  *out << "Mispredictions: " << mispredBTB[index] << endl;
+  *out << "Ratio of mispredictions: "
+       << ((double)mispredBTB[index]) / totalpredBTB[index] << endl;
+  *out << "BTB misses: " << missesBTB[index] << endl;
+  *out << "Ratio of BTB misses: "
+       << ((double)missesBTB[index]) / totalpredBTB[index] << endl;
+  *out << "Total predictions: " << totalpredBTB[index] << endl;
+}
+
 void Exit() {
   *out << "Fast forward count: " << fast_forward_count << endl;
   *out << "===============================================" << endl;
@@ -272,9 +286,12 @@ void Exit() {
   *out << "Mispredictions in Hybrid1 : " << mispredHyb1 << endl;
   *out << "Mispredictions in Hybrid2-1 : " << mispredHyb2maj << endl;
   *out << "Mispredictions in Hybrid2-2 : " << mispredHyb2meta << endl;
-  *out << "Mispredictions in BTB PC : " << mispredBTB[0] << endl;
-  *out << "Mispredictions in BTB PC and global history : " << mispredBTB[1]
-       << endl;
+  *out << "===============================================" << endl;
+  *out << "BTB PC:" << endl;
+  outputBTB(0);
+  *out << "===============================================" << endl;
+  *out << "BTB PC and global history:" << endl;
+  outputBTB(1);
   *out << "===============================================" << endl;
   exit(0);
 }
