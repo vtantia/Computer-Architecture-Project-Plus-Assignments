@@ -29,11 +29,10 @@ UINT32 sag_bht[1024] = {0};
 UINT32 sag_pht[512] = {0};
 UINT32 mispredSag = 0;
 //
-UINT32 gag_bht = 0;
+UINT32 g_bht = 0;
 UINT32 gag_pht[512] = {0};
 UINT32 mispredGag = 0;
 //
-UINT32 gshare_bht = 0;
 UINT32 gshare_pht[512] = {0};
 UINT32 mispredGshare = 0;
 //
@@ -53,7 +52,7 @@ UINT32 hyb2_g_gsh[512] = {0};
 
 #define NUM_BTB 128
 UINT32 mispredBTB[2] = {0};
-UINT32 lastTimeBTB[2] = {0};
+UINT64 lastTimeBTB[2] = {0};
 UINT32 btbHist = 0;
 BtbEntry btb[2][NUM_BTB][4];
 
@@ -85,7 +84,7 @@ INT32 Usage() {
   return -1;
 }
 
-VOID updateCount(UINT32 *toChange, BOOL isTaken, UINT32 limit) {
+inline VOID updateCount(UINT32 *toChange, BOOL isTaken, UINT32 limit) {
   if (*toChange != limit && isTaken)
     (*toChange)++;
   else if (*toChange != 0 && !isTaken)
@@ -93,47 +92,45 @@ VOID updateCount(UINT32 *toChange, BOOL isTaken, UINT32 limit) {
 }
 
 VOID BranchPredFNBT(ADDRINT insAddr, ADDRINT bTargetAddr, BOOL isTaken) {
-  mispredFNBT += ((bTargetAddr - insAddr) > 0) ? isTaken : !isTaken;
+  mispredFNBT += (bTargetAddr > insAddr) ? isTaken : !isTaken;
 
   mispredBimod += (bimod[(insAddr) % 512] < 2) ? isTaken : !isTaken;
   updateCount(&bimod[(insAddr) % 512], isTaken, 3);
 
   UINT32 hist_sag = sag_bht[insAddr % 1024];
-  UINT32 sag_pred = (sag_pht[hist_sag] < 4) ? 0 : 1;
-  mispredSag += (sag_pht[hist_sag] < 4) ? isTaken : !isTaken;
-  updateCount(&sag_pht[hist_sag], isTaken, 7);
+  UINT32 sag_pred = !(sag_pht[hist_sag] < 2);
+  mispredSag += (sag_pred) ? !isTaken : isTaken;
+  updateCount(&sag_pht[hist_sag], isTaken, 3);
   sag_bht[insAddr % 1024] =
       ((sag_bht[insAddr % 1024] << 1) + isTaken) & 0x1ff;
 
-  UINT32 gag_pred = (gag_pht[gag_bht] < 4) ? 0 : 1;
-  mispredGag += (gag_pht[gag_bht] < 4) ? isTaken : !isTaken;
-  updateCount(&gag_pht[gag_bht], isTaken, 7);
-  gag_bht = ((gag_bht << 1) + isTaken) & 0x1ff;
+  UINT32 gag_pred = !(gag_pht[g_bht] < 4);
+  mispredGag += (gag_pred) ? !isTaken : isTaken;
+  updateCount(&gag_pht[g_bht], isTaken, 7);
 
-  UINT32 index = gshare_bht ^ (insAddr & 0x1ff);
-  UINT32 gshare_pred = (gshare_pht[index] < 4);
-  mispredGshare += (gshare_pht[index] < 4) ? isTaken : !isTaken;
+  UINT32 index = g_bht ^ (insAddr & 0x1ff);
+  UINT32 gshare_pred = !(gshare_pht[index] < 4);
+  mispredGshare += (gshare_pred) ? !isTaken : isTaken;
   updateCount(&gshare_pht[index], isTaken, 7);
-  gshare_bht = ((gshare_bht << 1) + isTaken) & 0x1ff;
 
   UINT32 needUpdate = ((!gag_pred) * sag_pred) + (gag_pred * (!sag_pred));
-  mispredHyb1 += (hyb1_meta[gag_bht] < 2) ? (isTaken != sag_pred)
-                                          : (isTaken != gag_pred);
+  mispredHyb1 += (hyb1_meta[g_bht] < 2) ? (isTaken != sag_pred)
+                                        : (isTaken != gag_pred);
   if (needUpdate) {
     // GAg is assumed on high end of counter
     UINT32 gagCorrect = (gag_pred == isTaken);
-    updateCount(&hyb1_meta[gag_bht], gagCorrect, 3);
+    updateCount(&hyb1_meta[g_bht], gagCorrect, 3);
   }
 
   UINT32 majVote = (gshare_pred + gag_pred + sag_pred) > 1;
   mispredHyb2maj += (majVote != isTaken);
 
   UINT32 metaVote = 0;
-  if (hyb2_s_g[gag_bht] < 2 && hyb2_s_gsh[gag_bht] < 2) {
+  if (hyb2_s_g[g_bht] < 2 && hyb2_s_gsh[g_bht] < 2) {
     metaVote = sag_pred;
-  } else if (hyb2_g_gsh[gag_bht] > 1 && hyb2_s_gsh[gag_bht] > 1) {
+  } else if (hyb2_g_gsh[g_bht] > 1 && hyb2_s_gsh[g_bht] > 1) {
     metaVote = gshare_pred;
-  } else if (hyb2_g_gsh[gag_bht] < 2 && hyb2_s_g[gag_bht] > 1) {
+  } else if (hyb2_g_gsh[g_bht] < 2 && hyb2_s_g[g_bht] > 1) {
     metaVote = gag_pred;
   } else {
     metaVote = (gshare_pred + gag_pred + sag_pred) > 1;
@@ -145,11 +142,13 @@ VOID BranchPredFNBT(ADDRINT insAddr, ADDRINT bTargetAddr, BOOL isTaken) {
   UINT32 update_g_gsh =
       ((!gag_pred) * gshare_pred) + (gag_pred * (!gshare_pred));
   if (update_s_g) // Second is higher
-    updateCount(&hyb2_s_g[gag_bht], (gag_pred == isTaken), 3);
+    updateCount(&hyb2_s_g[g_bht], (gag_pred == isTaken), 3);
   if (update_s_gsh) // Second is higher
-    updateCount(&hyb2_s_gsh[gag_bht], (gshare_pred == isTaken), 3);
+    updateCount(&hyb2_s_gsh[g_bht], (gshare_pred == isTaken), 3);
   if (update_g_gsh) // Second is higher
-    updateCount(&hyb2_g_gsh[gag_bht], (gshare_pred == isTaken), 3);
+    updateCount(&hyb2_g_gsh[g_bht], (gshare_pred == isTaken), 3);
+
+  g_bht = ((g_bht << 1) + isTaken) & 0x1ff;
 }
 
 VOID UpdateCondBrHist(BOOL isTaken) {
@@ -168,7 +167,7 @@ VOID IndirectPred(ADDRINT insAddr, ADDRINT nextInsAddr, ADDRINT targetAddr,
     if (!b.valid) {
       invalidIndex = i;
     } else if (b.tag == insAddr) {
-      mispredBTB[btbIndex] += !(targetAddr == b.target);
+      mispredBTB[btbIndex] += (targetAddr != b.target);
       b.target = targetAddr;
       b.timestamp = lastTimeBTB[btbIndex]++;
       found = true;
@@ -183,12 +182,8 @@ VOID IndirectPred(ADDRINT insAddr, ADDRINT nextInsAddr, ADDRINT targetAddr,
   UINT32 toUpdate = (invalidIndex == 4) ? lruIndex : invalidIndex;
   if (!found && targetAddr != nextInsAddr) {
     mispredBTB[btbIndex] += 1;
-
     btb[btbIndex][cacheIndex][toUpdate] = {true, insAddr, targetAddr,
                                            lastTimeBTB[btbIndex]++};
-    /*BtbEntry &b =*/ // b.valid = true;
-    // b.tag = insAddr;
-    // b.target = targetAddr;
   }
 }
 
