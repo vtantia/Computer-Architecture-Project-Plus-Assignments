@@ -278,6 +278,14 @@ void Exit() {
   *out << "MyPinTool analysis results: " << endl;
   *out << "Number of instructions: " << insCount << endl;
   *out << "===============================================" << endl;
+  *out << " & FNBT & Bimodal & SAg & GAg & gshare & Hybrid of SAg and GAg "
+          "& Hybrid of All: Majority Voter & Hybrid of All: Three Tables"
+       << endl;
+  *out << "Ratio of mispredictions & " << mispredFNBT << " & "
+       << mispredBimod << " & " << mispredSag << " & " << mispredGag
+       << " & " << mispredGshare << " & " << mispredHyb1 << " & "
+       << mispredHyb2maj << " & " << mispredHyb2meta << endl;
+  *out << "===============================================" << endl;
   *out << "Mispredictions in FNBT : " << mispredFNBT << endl;
   *out << "Mispredictions in bimodal : " << mispredBimod << endl;
   *out << "Mispredictions in SAg : " << mispredSag << endl;
@@ -292,6 +300,14 @@ void Exit() {
   *out << "===============================================" << endl;
   *out << "BTB PC and global history:" << endl;
   outputBTB(1);
+  *out << "===============================================" << endl;
+  *out << " & BTB PC Hash & BTB PC and Global History Hash" << endl;
+  *out << "Ratio of mispredictions & "
+       << ((double)mispredBTB[0]) / totalpredBTB[0] << " & "
+       << ((double)mispredBTB[1]) / totalpredBTB[1] << endl;
+  *out << "Ratio of BTB misses & "
+       << ((double)missesBTB[0]) / totalpredBTB[0] << " & "
+       << ((double)missesBTB[1]) / totalpredBTB[1] << endl;
   *out << "===============================================" << endl;
   exit(0);
 }
