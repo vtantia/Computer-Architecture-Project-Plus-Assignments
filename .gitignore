@@ -5,3 +5,4 @@
 !makefile*
 !final_commands.txt
 !.clang-format
+!runner.py
