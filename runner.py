@@ -10,7 +10,7 @@ progs = [('400.perlbench', 207000000000, './perlbench_base.i386 -I./lib diffmail
          ('483.xalancbmk', 1331000000000, './xalancbmk_base.i386 -v t5.xml xalanc.xsl ')]
 
 def command(prog, ff, cmd):
-  st = "date; cd ~/spec_2006/" + prog + "; ~/pin-3.0-76991-gcc-linux/pin -t ~/pin-3.0-76991-gcc-linux/source/tools/HW1/obj-ia32/HW2.so -o " + prog + ".output -f " + str(ff) + " -- " + cmd + " > " + prog + ".stdout; date; bash;"
+  st = "cd ~/spec_2006/" + prog + "; date > prog.date; ~/pin-3.0-76991-gcc-linux/pin -t ~/pin-3.0-76991-gcc-linux/source/tools/HW1/obj-ia32/HW2.so -o " + prog + ".output -f " + str(ff) + " -- " + cmd + " > " + prog + ".stdout 2> prog.error; date >> prog.date"
   return "bash -c '" + st + "'"
 
 for prog in progs:
