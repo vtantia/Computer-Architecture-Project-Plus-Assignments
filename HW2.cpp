@@ -96,6 +96,9 @@ inline VOID updateCount(UINT32 *toChange, BOOL isTaken, UINT32 limit) {
 }
 
 VOID BranchPredFNBT(ADDRINT insAddr, ADDRINT bTargetAddr, BOOL isTaken) {
+  btbHist = (btbHist << 1) % NUM_BTB;
+  btbHist += isTaken;
+
   totPreds++;
   BOOL isForward = (bTargetAddr > insAddr);
   directionCount[isForward]++;
@@ -181,10 +184,7 @@ VOID BranchPredFNBT(ADDRINT insAddr, ADDRINT bTargetAddr, BOOL isTaken) {
   g_bht = ((g_bht << 1) + isTaken) & 0x1ff;
 }
 
-VOID UpdateCondBrHist(BOOL isTaken) {
-  btbHist = (btbHist << 1) % NUM_BTB;
-  btbHist += isTaken;
-}
+VOID UpdateCondBrHist(BOOL isTaken) {}
 
 VOID IndirectPred(ADDRINT insAddr, ADDRINT nextInsAddr, ADDRINT targetAddr,
                   UINT32 cacheIndex, UINT32 btbIndex) {
@@ -248,21 +248,13 @@ ADDRINT FastForward(void) { return (insCount >= fast_forward_count); }
  */
 
 VOID Instruction(INS ins, VOID *v) {
-  if (INS_IsDirectBranch(ins)) {
+  if (INS_Category(ins) == XED_CATEGORY_COND_BR) {
     INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
     INS_InsertThenPredicatedCall(
         ins, IPOINT_BEFORE, (AFUNPTR)BranchPredFNBT, IARG_ADDRINT,
         INS_Address(ins),        // instruction address
         IARG_BRANCH_TARGET_ADDR, // branch target address
         IARG_BRANCH_TAKEN,       // if branch is taken
-        IARG_END);
-  }
-
-  if (INS_Category(ins) == XED_CATEGORY_COND_BR) {
-    INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-    INS_InsertThenPredicatedCall(
-        ins, IPOINT_BEFORE, (AFUNPTR)UpdateCondBrHist,
-        IARG_BRANCH_TAKEN, // branch target address
         IARG_END);
   }
 
