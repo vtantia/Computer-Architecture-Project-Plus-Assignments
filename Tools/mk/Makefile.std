@@ -21,7 +21,15 @@ ifeq ($(ARCH), sgi)
 else
 ifeq ($(ARCH), x86)
 # x86 settings
+
+# MODERN_ARCH is defined if it is being run on a new machine
+# Define it in setup.sh
+ifeq ($(MODERN_ARCH),1)
+	OPT=-O3 -Wno-write-strings -D__i386__ `pkg-config --cflags --libs gtk+-2.0` -m32 -DMODERN_ARCH
+else
 	OPT=-O3
+endif
+
 #	CCNOOPT=/mnt/gcc-3.1.1/bin/gcc
 #	CXXNOOPT=/mnt/gcc-3.1.1/bin/g++
 #	CC=$(CCNOOPT)  $(OPT)

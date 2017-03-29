@@ -30,11 +30,16 @@
 #include "misc.h"
 #include "mips.h"
 
+#ifdef MODERN_ARCH
+#include <errno.h>
+#else
+extern int errno;
+#endif
+
+
 // map open(), creat() flags from host architecture to native
 // architecture
 unsigned int mode_remap (unsigned int);
-
-extern int errno;
 
 #define MINUS_ONE  0xffffffffffffffffULL
 

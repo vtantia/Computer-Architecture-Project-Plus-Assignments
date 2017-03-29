@@ -21,9 +21,16 @@ else
 #
 OFILES=asm_support.o c_support.o
 
+ifeq ($(MODERN_ARCH), 1)
+	TOOLCHAIN_LOCATION=-B$(MIPS_BINS_LOCATION)/mips-sgi-irix5- -L$(MIPS_LIBS_LOCATION)
+else
+	TOOLCHAIN_LOCATION=
+	MIPS_BINS_LOCATION=/usr/local/bin
+endif
+
 HOST_CC=$(SIMDIR)/Tools/bin/mips-cc.pl -mips2 -I$(SIMDIR)/cpus/common -O2
-HOST_AS=/usr/local/bin/mips-sgi-irix5-gcc -mips2 -non_shared -x assembler-with-cpp -EB -O -DX86 -D__MIPSEB -I. 
-AR=/usr/local/bin/mips-sgi-irix5-ld -noinhibit-exec
+HOST_AS=$(MIPS_BINS_LOCATION)/mips-sgi-irix5-gcc -mips2 -non_shared -x assembler-with-cpp -EB -O -DX86 -D__MIPSEB -I. $(TOOLCHAIN_LOCATION)
+AR=$(MIPS_BINS_LOCATION)/mips-sgi-irix5-ld -noinhibit-exec
 
 TARGETS=supportlib.a
 

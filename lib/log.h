@@ -30,7 +30,7 @@
  * logged (level = '*').
  */
 #include <stdio.h>
-#include <iostream.h>
+#include <iostream>
 #include "mytime.h"
 
 class LogHexInt { };
@@ -61,7 +61,7 @@ class Log {
   Log &operator <<(unsigned int);
   Log &operator <<(long);
 
-  Log &operator <<(ostream& fn(ostream&outs));
+  Log &operator <<(std::ostream& fn(std::ostream&outs));
 
   Log &operator <<(LogHexInt);
   Log &operator <<(LogDecInt);
