@@ -699,9 +699,10 @@ void Mipc::func_sll(Mipc *mc, unsigned ins) {
 }
 
 void Mipc::func_sllv(Mipc *mc, unsigned ins) {
-    printf("Encountered unimplemented instruction: sllv.\n");
-    printf("You need to fill in func_sllv in exec_helper.cc to proceed forward.\n");
-    exit(0);
+    // printf("Encountered unimplemented instruction: sllv.\n");
+    // printf("You need to fill in func_sllv in exec_helper.cc to proceed forward.\n");
+    // exit(0);
+    mc->_opResultLo = mc->_decodedSRC2 << (mc->_decodedSRC1 & 0x1f);
 }
 
 void Mipc::func_slt(Mipc *mc, unsigned ins) {
@@ -893,9 +894,10 @@ void Mipc::func_xori(Mipc *mc, unsigned ins) {
 
 void Mipc::func_beq(Mipc *mc, unsigned ins) {
     mc->_num_cond_br++;
-    printf("Encountered unimplemented instruction: beq.\n");
-    printf("You need to fill in func_beq in exec_helper.cc to proceed forward.\n");
-    exit(0);
+    // printf("Encountered unimplemented instruction: beq.\n");
+    // printf("You need to fill in func_beq in exec_helper.cc to proceed forward.\n");
+    // exit(0);
+    mc->_btaken = (mc->_decodedSRC1 == mc->_decodedSRC2) ? 1 : 0;
 }
 
 void Mipc::func_bgez(Mipc *mc, unsigned ins) {
