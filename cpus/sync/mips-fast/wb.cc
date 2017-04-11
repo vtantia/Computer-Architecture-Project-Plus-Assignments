@@ -21,7 +21,7 @@ void Writeback::MainLoop(void) {
 
     while (1) {
         // Sample the important signals
-        if ((ins = pipeline->mem_wb._ins) != 0) {
+        if (!pipeline->mem_wb._kill) {
             DDBG;
             AWAIT_P_PHI0;  // @posedge
             DDBG;
@@ -35,6 +35,8 @@ void Writeback::MainLoop(void) {
             isSyscall = pipeline->mem_wb._isSyscall;
             isIllegalOp = pipeline->mem_wb._isIllegalOp;
 
+            ins = pipeline->mem_wb._ins;
+
             DDBG;
             AWAIT_P_PHI1;  // @negedge
             DDBG;
@@ -45,7 +47,7 @@ void Writeback::MainLoop(void) {
                         SIM_TIME, _mc->_pc);
 #endif
                 _mc->_opControl(_mc, ins);
-                _mc->_pc += 4;
+                //_mc->_pc += 4;
             } else if (isIllegalOp) {
                 printf("Illegal ins %#x at PC %#x. Terminating simulation!\n", ins,
                        _mc->_pc);
@@ -86,6 +88,11 @@ void Writeback::MainLoop(void) {
                     }
                 }
             }
+
+            if (pipeline->mem_wb._isSyscall) {
+                pipeline->if_id._fetch_kill = FALSE;
+            }
+
             _mc->_gpr[0] = 0;
             //_mc->_memValid = FALSE;
             //_mc->_insDone = TRUE;

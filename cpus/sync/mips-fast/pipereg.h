@@ -43,6 +43,9 @@ public:
 class IF_ID {
 public:
     unsigned int _ins;
+    Bool _kill;         // Kill signal for pipeline stage
+    Bool _fetch_kill;   // Kill signal for pipeline stage
+    int _was_branch;
 };
 
 class ID_EX : public Common {

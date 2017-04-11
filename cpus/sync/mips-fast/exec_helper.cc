@@ -39,7 +39,6 @@ void Mipc::Dec(unsigned int ins) {
         x <<= 16;          \
         x >>= 16;          \
     } while (0)
-
     switch (i.reg.op) {
         case 0:
             // SPECIAL (ALU format)
@@ -52,6 +51,9 @@ void Mipc::Dec(unsigned int ins) {
             _loWPort = FALSE;
             _memControl = FALSE;
 
+            if(ins == 2160649) {
+                cout << "decoded src1 " << _decodedSRC1 << endl;
+            }
             switch (i.reg.func) {
                 case 0x20:  // add
                 case 0x21:  // addu

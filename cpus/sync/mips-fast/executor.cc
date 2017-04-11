@@ -4,7 +4,7 @@
 Exe::Exe(Mipc *mc) {
     _mc = mc;
     memset(&pipeline->ex_mem, 0, sizeof(pipeline->ex_mem));
-    pipeline->ex_mem._memControl = FALSE;
+    pipeline->ex_mem._kill = TRUE;
 }
 
 Exe::~Exe(void) {
@@ -17,11 +17,12 @@ void Exe::MainLoop(void) {
     Bool isSyscall, isIllegalOp;
 
     while (1) {
-        if ((ins = pipeline->id_ex._ins) != 0) {
+        if (!pipeline->id_ex._kill) {
             DDBG;
             AWAIT_P_PHI0;  // @posedge
             DDBG;
             ex_pipe = pipeline->id_ex;
+            ins = pipeline->id_ex._ins;
 
             isSyscall = ex_pipe._isSyscall;
             isIllegalOp = ex_pipe._isIllegalOp;
@@ -44,12 +45,17 @@ void Exe::MainLoop(void) {
             }
             //_mc->_decodeValid = FALSE;
             //_mc->_execValid = TRUE;
-
+            cout << "_mc->_bd is " << _mc->_bd << endl;
+            cout << "pipeline->_bd is " << pipeline->id_ex._bd << endl;
+            cout << "pipeline->_btgt is " << pipeline->id_ex._btgt << endl;
             if (!isIllegalOp && !isSyscall) {
-                if (_mc->_lastbd && _mc->_btaken) {
-                    _mc->_pc = _mc->_btgt;
-                //} else {
-                    //_mc->_pc = _mc->_pc + 4;
+                if(pipeline->id_ex._bd) {
+                    if (pipeline->id_ex._bd && _mc->_btaken) {
+                        _mc->_pc = pipeline->id_ex._btgt;
+                    } else {
+                        cout << "Incrementing _pc because SWAG " << _mc->_btaken << endl;
+                        _mc->_pc = _mc->_pc + 4;
+                    }
                 }
                 _mc->_lastbd = _mc->_bd;
             }
@@ -62,8 +68,13 @@ void Exe::MainLoop(void) {
             pipeline->ex_mem._opResultLo = _mc->_opResultLo;
             pipeline->ex_mem._opResultHi = _mc->_opResultHi;
             pipeline->ex_mem._btaken = _mc->_btaken;
+
+            pipeline->ex_mem._kill = FALSE;
         } else {
-            PAUSE(1);
+            AWAIT_P_PHI0;  // @posedge
+            AWAIT_P_PHI1;  // @negedge
+            pipeline->ex_mem._kill = TRUE;
+            // PAUSE(1);
         }
     }
 }

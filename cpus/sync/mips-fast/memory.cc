@@ -4,6 +4,8 @@
 Memory::Memory(Mipc *mc) {
     _mc = mc;
     memset(&pipeline->mem_wb, 0, sizeof(pipeline->mem_wb));
+
+    pipeline->mem_wb._kill = TRUE;
 }
 
 Memory::~Memory(void) {
@@ -15,7 +17,7 @@ void Memory::MainLoop(void) {
     Bool memControl;
 
     while (1) {
-        if (pipeline->ex_mem._ins != 0) {
+        if (!pipeline->ex_mem._kill) {
             DDBG;
             AWAIT_P_PHI0;  // @posedge
             DDBG;
@@ -46,8 +48,12 @@ void Memory::MainLoop(void) {
 
             pipeline->mem_wb.copyFromPipe(&mem_pipe);
 
+            pipeline->mem_wb._kill = FALSE;
         } else {
-            PAUSE(1);
+            AWAIT_P_PHI0;  // @posedge
+            AWAIT_P_PHI1;  // @negedge
+            pipeline->mem_wb._kill = TRUE;
+            // PAUSE(1);
         }
     }
 }

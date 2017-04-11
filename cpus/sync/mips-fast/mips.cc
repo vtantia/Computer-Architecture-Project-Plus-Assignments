@@ -7,6 +7,8 @@ Mipc::Mipc(Mem *m) : _l('M') {
     _mem = m;
     _sys = new MipcSysCall(this);  // Allocate syscall layer
     memset(&pipeline->if_id, 0, sizeof(pipeline->if_id));
+    pipeline->if_id._kill = TRUE;
+
     Reboot(ParamGetString("Mipc.BootROM"));
 }
 
@@ -22,7 +24,7 @@ void Mipc::MainLoop(void) {
     _nfetched = 0;
 
     while (!_sim_exit) {
-        if (true) {
+        if (!pipeline->if_id._fetch_kill) {
             DDBG;
             AWAIT_P_PHI0;  // @posedge
             DDBG;
@@ -37,7 +39,8 @@ void Mipc::MainLoop(void) {
             ins = _mem->BEGetWord(addr, _mem->Read(addr & ~(LL)0x7));
             _ins = ins;
 
-            cout << "Instruction is " << ins << " at nfetch " << _nfetched << " at PC " << _pc << endl;
+            cout << "Instruction is " << ins << " at nfetch " << _nfetched <<
+                " at PC " << _pc << endl;
             fflush(stdout);
 
             pipeline->if_id._ins = ins;
@@ -45,8 +48,13 @@ void Mipc::MainLoop(void) {
             //_insDone = FALSE;
             _nfetched++;
             _bd = 0;
+
+            pipeline->if_id._kill = FALSE;
         } else {
-            PAUSE(1);
+            AWAIT_P_PHI0;  // @posedge
+            AWAIT_P_PHI1;  // @negedge
+            pipeline->if_id._kill = TRUE;
+            // PAUSE(1);
         }
     }
 
