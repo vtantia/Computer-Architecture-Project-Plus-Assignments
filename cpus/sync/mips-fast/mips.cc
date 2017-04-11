@@ -37,6 +37,9 @@ void Mipc::MainLoop(void) {
             ins = _mem->BEGetWord(addr, _mem->Read(addr & ~(LL)0x7));
             _ins = ins;
 
+            cout << "Instruction is " << ins << " at nfetch " << _nfetched << " at PC " << _pc << endl;
+            fflush(stdout);
+
             pipeline->if_id._ins = ins;
             //_insValid = TRUE;
             //_insDone = FALSE;

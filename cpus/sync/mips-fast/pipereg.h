@@ -31,6 +31,8 @@ public:
     Bool _isSyscall;    // 1 if system call
     Bool _isIllegalOp;  // 1 if illegal opcode
 
+    Bool _kill;         // Kill signal for pipeline stage
+
     void (*_opControl)(Mipc *, unsigned);
     void (*_memOp)(Mipc *);
 

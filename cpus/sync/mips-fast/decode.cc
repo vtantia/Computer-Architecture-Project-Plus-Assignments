@@ -13,11 +13,12 @@ Decode::~Decode(void) {
 void Decode::MainLoop(void) {
     unsigned int ins;
     while (1) {
-        if (true) {
+        if ((ins = pipeline->if_id._ins) != 0) {
             DDBG;
             AWAIT_P_PHI0;  // @posedge
             DDBG;
-            ins = pipeline->if_id._ins;
+
+            _mc->_pc = _mc->_pc + 4;
 
             DDBG;
             AWAIT_P_PHI1;  // @negedge

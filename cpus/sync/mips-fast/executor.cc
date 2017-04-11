@@ -4,6 +4,7 @@
 Exe::Exe(Mipc *mc) {
     _mc = mc;
     memset(&pipeline->ex_mem, 0, sizeof(pipeline->ex_mem));
+    pipeline->ex_mem._memControl = FALSE;
 }
 
 Exe::~Exe(void) {
@@ -16,12 +17,12 @@ void Exe::MainLoop(void) {
     Bool isSyscall, isIllegalOp;
 
     while (1) {
-        if (true) {
+        if ((ins = pipeline->id_ex._ins) != 0) {
             DDBG;
             AWAIT_P_PHI0;  // @posedge
             DDBG;
             ex_pipe = pipeline->id_ex;
-            ins = ex_pipe._ins;
+
             isSyscall = ex_pipe._isSyscall;
             isIllegalOp = ex_pipe._isIllegalOp;
 
@@ -47,8 +48,8 @@ void Exe::MainLoop(void) {
             if (!isIllegalOp && !isSyscall) {
                 if (_mc->_lastbd && _mc->_btaken) {
                     _mc->_pc = _mc->_btgt;
-                } else {
-                    _mc->_pc = _mc->_pc + 4;
+                //} else {
+                    //_mc->_pc = _mc->_pc + 4;
                 }
                 _mc->_lastbd = _mc->_bd;
             }
@@ -56,9 +57,11 @@ void Exe::MainLoop(void) {
             DDBG;
             AWAIT_P_PHI1;  // @negedge
             DDBG;
-            pipeline->ex_mem._ins = ins;
-            pipeline->ex_mem._memControl = _mc->_memControl;
-            pipeline->ex_mem._memOp = _mc->_memOp;
+            pipeline->ex_mem.copyFromPipe(&ex_pipe);
+            pipeline->ex_mem._MAR = _mc->_MAR;
+            pipeline->ex_mem._opResultLo = _mc->_opResultLo;
+            pipeline->ex_mem._opResultHi = _mc->_opResultHi;
+            pipeline->ex_mem._btaken = _mc->_btaken;
         } else {
             PAUSE(1);
         }

@@ -21,7 +21,7 @@ void Writeback::MainLoop(void) {
 
     while (1) {
         // Sample the important signals
-        if (true) {
+        if ((ins = pipeline->mem_wb._ins) != 0) {
             DDBG;
             AWAIT_P_PHI0;  // @posedge
             DDBG;
@@ -34,9 +34,6 @@ void Writeback::MainLoop(void) {
             opResultHi = pipeline->mem_wb._opResultHi;
             isSyscall = pipeline->mem_wb._isSyscall;
             isIllegalOp = pipeline->mem_wb._isIllegalOp;
-            ins = pipeline->mem_wb._ins;
-            cout << "Instruction is " << ins << endl;
-            fflush(stdout);
 
             DDBG;
             AWAIT_P_PHI1;  // @negedge

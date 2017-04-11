@@ -7,6 +7,7 @@
 #include "app_syscall.h"
 
 extern ID_EX ex_pipe;
+extern EX_MEM mem_pipe;
 /*------------------------------------------------------------------------
  *
  *  Instruction exec
@@ -779,7 +780,7 @@ void Mipc::func_mflo(Mipc *mc, unsigned ins) {
 }
 
 void Mipc::func_mthi(Mipc *mc, unsigned ins) {
-    mc->_opResultLo = ex_pipe._decodedSRC1;
+    mc->_opResultHi = ex_pipe._decodedSRC1;
 }
 
 void Mipc::func_mtlo(Mipc *mc, unsigned ins) {
@@ -1077,97 +1078,103 @@ void Mipc::func_mfc1(Mipc *mc, unsigned ins) {
 void Mipc::mem_lb(Mipc *mc) {
     signed int a1;
 
-    a1 = mc->_mem->BEGetByte(mc->_MAR, mc->_mem->Read(mc->_MAR & ~(LL)0x7));
+    a1 = mc->_mem->BEGetByte(mem_pipe._MAR, mc->_mem->Read(mem_pipe._MAR & ~(LL)0x7));
     SIGN_EXTEND_BYTE(a1);
     mc->_opResultLo = a1;
 }
 
 void Mipc::mem_lbu(Mipc *mc) {
-    mc->_opResultLo = mc->_mem->BEGetByte(mc->_MAR, mc->_mem->Read(mc->_MAR & ~(LL)0x7));
+    mc->_opResultLo =
+        mc->_mem->BEGetByte(mem_pipe._MAR, mc->_mem->Read(mem_pipe._MAR & ~(LL)0x7));
 }
 
 void Mipc::mem_lh(Mipc *mc) {
     signed int a1;
 
-    a1 = mc->_mem->BEGetHalfWord(mc->_MAR, mc->_mem->Read(mc->_MAR & ~(LL)0x7));
+    a1 = mc->_mem->BEGetHalfWord(mem_pipe._MAR, mc->_mem->Read(mem_pipe._MAR & ~(LL)0x7));
     SIGN_EXTEND_IMM(a1);
     mc->_opResultLo = a1;
 }
 
 void Mipc::mem_lhu(Mipc *mc) {
     mc->_opResultLo =
-        mc->_mem->BEGetHalfWord(mc->_MAR, mc->_mem->Read(mc->_MAR & ~(LL)0x7));
+        mc->_mem->BEGetHalfWord(mem_pipe._MAR, mc->_mem->Read(mem_pipe._MAR & ~(LL)0x7));
 }
 
 void Mipc::mem_lwl(Mipc *mc) {
     signed int a1;
     unsigned s1;
 
-    a1 = mc->_mem->BEGetWord(mc->_MAR, mc->_mem->Read(mc->_MAR & ~(LL)0x7));
-    s1 = (mc->_MAR & 3) << 3;
-    mc->_opResultLo = (a1 << s1) | (mc->_subregOperand & ~(~0UL << s1));
+    a1 = mc->_mem->BEGetWord(mem_pipe._MAR, mc->_mem->Read(mem_pipe._MAR & ~(LL)0x7));
+    s1 = (mem_pipe._MAR & 3) << 3;
+    mc->_opResultLo = (a1 << s1) | (mem_pipe._subregOperand & ~(~0UL << s1));
 }
 
 void Mipc::mem_lw(Mipc *mc) {
-    mc->_opResultLo = mc->_mem->BEGetWord(mc->_MAR, mc->_mem->Read(mc->_MAR & ~(LL)0x7));
+    mc->_opResultLo =
+        mc->_mem->BEGetWord(mem_pipe._MAR, mc->_mem->Read(mem_pipe._MAR & ~(LL)0x7));
 }
 
 void Mipc::mem_lwr(Mipc *mc) {
     unsigned ar1, s1;
 
-    ar1 = mc->_mem->BEGetWord(mc->_MAR, mc->_mem->Read(mc->_MAR & ~(LL)0x7));
-    s1 = (~mc->_MAR & 3) << 3;
-    mc->_opResultLo = (ar1 >> s1) | (mc->_subregOperand & ~(~(unsigned)0 >> s1));
+    ar1 = mc->_mem->BEGetWord(mem_pipe._MAR, mc->_mem->Read(mem_pipe._MAR & ~(LL)0x7));
+    s1 = (~mem_pipe._MAR & 3) << 3;
+    mc->_opResultLo = (ar1 >> s1) | (mem_pipe._subregOperand & ~(~(unsigned)0 >> s1));
 }
 
 void Mipc::mem_lwc1(Mipc *mc) {
-    mc->_opResultLo = mc->_mem->BEGetWord(mc->_MAR, mc->_mem->Read(mc->_MAR & ~(LL)0x7));
+    mc->_opResultLo =
+        mc->_mem->BEGetWord(mem_pipe._MAR, mc->_mem->Read(mem_pipe._MAR & ~(LL)0x7));
 }
 
 void Mipc::mem_swc1(Mipc *mc) {
     mc->_mem->Write(
-        mc->_MAR & ~(LL)0x7,
+        mem_pipe._MAR & ~(LL)0x7,
         mc->_mem->BESetWord(
-            mc->_MAR, mc->_mem->Read(mc->_MAR & ~(LL)0x7),
+            mem_pipe._MAR, mc->_mem->Read(mem_pipe._MAR & ~(LL)0x7),
             mc->_fpr[mc->_decodedDST >> 1].l[FP_TWIDDLE ^ (mc->_decodedDST & 1)]));
 }
 
 void Mipc::mem_sb(Mipc *mc) {
-    mc->_mem->Write(mc->_MAR & ~(LL)0x7,
-                    mc->_mem->BESetByte(mc->_MAR, mc->_mem->Read(mc->_MAR & ~(LL)0x7),
-                                        mc->_gpr[mc->_decodedDST] & 0xff));
+    mc->_mem->Write(
+        mem_pipe._MAR & ~(LL)0x7,
+        mc->_mem->BESetByte(mem_pipe._MAR, mc->_mem->Read(mem_pipe._MAR & ~(LL)0x7),
+                            mc->_gpr[mc->_decodedDST] & 0xff));
 }
 
 void Mipc::mem_sh(Mipc *mc) {
-    mc->_mem->Write(mc->_MAR & ~(LL)0x7,
-                    mc->_mem->BESetHalfWord(mc->_MAR, mc->_mem->Read(mc->_MAR & ~(LL)0x7),
-                                            mc->_gpr[mc->_decodedDST] & 0xffff));
+    mc->_mem->Write(
+        mem_pipe._MAR & ~(LL)0x7,
+        mc->_mem->BESetHalfWord(mem_pipe._MAR, mc->_mem->Read(mem_pipe._MAR & ~(LL)0x7),
+                                mc->_gpr[mc->_decodedDST] & 0xffff));
 }
 
 void Mipc::mem_swl(Mipc *mc) {
     unsigned ar1, s1;
 
-    ar1 = mc->_mem->BEGetWord(mc->_MAR, mc->_mem->Read(mc->_MAR & ~(LL)0x7));
-    s1 = (mc->_MAR & 3) << 3;
+    ar1 = mc->_mem->BEGetWord(mem_pipe._MAR, mc->_mem->Read(mem_pipe._MAR & ~(LL)0x7));
+    s1 = (mem_pipe._MAR & 3) << 3;
     ar1 = (mc->_gpr[mc->_decodedDST] >> s1) | (ar1 & ~(~(unsigned)0 >> s1));
-    mc->_mem->Write(
-        mc->_MAR & ~(LL)0x7,
-        mc->_mem->BESetWord(mc->_MAR, mc->_mem->Read(mc->_MAR & ~(LL)0x7), ar1));
+    mc->_mem->Write(mem_pipe._MAR & ~(LL)0x7,
+                    mc->_mem->BESetWord(mem_pipe._MAR,
+                                        mc->_mem->Read(mem_pipe._MAR & ~(LL)0x7), ar1));
 }
 
 void Mipc::mem_sw(Mipc *mc) {
-    mc->_mem->Write(mc->_MAR & ~(LL)0x7,
-                    mc->_mem->BESetWord(mc->_MAR, mc->_mem->Read(mc->_MAR & ~(LL)0x7),
-                                        mc->_gpr[mc->_decodedDST]));
+    mc->_mem->Write(
+        mem_pipe._MAR & ~(LL)0x7,
+        mc->_mem->BESetWord(mem_pipe._MAR, mc->_mem->Read(mem_pipe._MAR & ~(LL)0x7),
+                            mc->_gpr[mc->_decodedDST]));
 }
 
 void Mipc::mem_swr(Mipc *mc) {
     unsigned ar1, s1;
 
-    ar1 = mc->_mem->BEGetWord(mc->_MAR, mc->_mem->Read(mc->_MAR & ~(LL)0x7));
-    s1 = (~mc->_MAR & 3) << 3;
+    ar1 = mc->_mem->BEGetWord(mem_pipe._MAR, mc->_mem->Read(mem_pipe._MAR & ~(LL)0x7));
+    s1 = (~mem_pipe._MAR & 3) << 3;
     ar1 = (mc->_gpr[mc->_decodedDST] << s1) | (ar1 & ~(~0UL << s1));
-    mc->_mem->Write(
-        mc->_MAR & ~(LL)0x7,
-        mc->_mem->BESetWord(mc->_MAR, mc->_mem->Read(mc->_MAR & ~(LL)0x7), ar1));
+    mc->_mem->Write(mem_pipe._MAR & ~(LL)0x7,
+                    mc->_mem->BESetWord(mem_pipe._MAR,
+                                        mc->_mem->Read(mem_pipe._MAR & ~(LL)0x7), ar1));
 }

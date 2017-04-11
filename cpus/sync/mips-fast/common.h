@@ -1,7 +1,11 @@
 #include "pipereg.h"
 #include <execinfo.h>
 #include <signal.h>
-#define DDBG fprintf(stdout, "%s %d\n", __FILE__, __LINE__);
+#ifdef MIPC_DEBUG
+#define DDBG fprintf(stdout, "%s %d\n", __FILE__, __LINE__)
+#else
+#define DDBG
+#endif
 
 extern Pipereg *pipeline;
 extern FILE *debugLog;

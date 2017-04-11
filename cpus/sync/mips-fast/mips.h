@@ -25,7 +25,7 @@ typedef unsigned Bool;
 #include "../../common/syscall.h"
 #include "queue.h"
 
-#define MIPC_DEBUG 1
+//#define MIPC_DEBUG 1
 
 class Mipc : public SimObject {
 public:
