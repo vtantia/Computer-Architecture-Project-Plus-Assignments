@@ -1,4 +1,5 @@
 #include "mips.h"
+#include "common.h"
 #include "decode.h"
 #include "executor.h"
 #include "memory.h"
@@ -7,106 +8,131 @@
 #include <stdlib.h>
 #include <string.h>
 
-void cleanup (void)
-{
-  Log::CloseLog ();
+void cleanup(void) {
+    Log::CloseLog();
 }
 
 #define SIZE 256
 
-int main (int argc, char **argv)
-{
-  Mipc *mh;
-  Decode *dec;
-  Exe *exec;
-  Memory *mem;
-  Mem *m;
-  Writeback *wb;
-  char buf[SIZE];
-  char *fname,*cname;
-  Bool l,c;
+Pipereg *pipeline;
 
-  l = FALSE;
-  c = FALSE;
+void MSG(char *a) {
+    fprintf(stdout, "%s\n", a);
+}
 
-  RegisterDefault ("Mipc.BootROM", "mipc.image");
-  RegisterDefault ("Mipc.BootPC", (int)0xbfc00000);
-  RegisterDefault ("Mipc.ArgvAddr", (int)0xbfc00100);
-  RegisterDefault ("Mipc.CacheLineToWatch", 0x1ULL);
-  RegisterDefault ("Log.FileName", "mipc.log");
-  RegisterDefault ("Log.Level", "");
-  RegisterDefault ("MemSystem.Type", "None");
-  RegisterDefault ("Log.StartDumpTime", 0);
-  RegisterDefault ("Mipc.PeriodicTimer", 100000);
+void handler(int sig) {
+    void *array[10];
+    size_t size;
 
-  /* fixup arguments */
-  if (argc > 1) {
-     if (argv[1][0]=='-' && argv[1][1]=='l') {
-        l = TRUE;
-        argv++;
-        argc--;
-        MALLOC(fname,char,strlen(argv[1])+1);
-        sprintf(fname,"%s",argv[1]);
-	argc--;
-        argv++;
-     }
-  }
+    // get void*'s for all entries on the stack
+    size = backtrace(array, 10);
 
-  if (argc > 1) {
-     if (argv[1][0]=='-' && argv[1][1]=='c') {
-        c = TRUE;
-        argv++;
-        argc--;
-        MALLOC(cname,char,strlen(argv[1])+1);  
-        sprintf(cname,"%s",argv[1]);
-        argc--;
-        argv++;
-        printf("conf file name is %s\n", cname);
-     }
-  }
+    // print out all the frames to stderr
+    fprintf(stderr, "Error: signal %d:\n", sig);
+    backtrace_symbols_fd(array, size, STDERR_FILENO);
+    cleanup();
+    exit(1);
+}
 
-  if (!c) {
-     ReadConfigFile();
-  }
-  else {
-     ReadConfigFile(cname);
-  }
+FILE *debugLog;
 
-  logTimer = ParamGetLL("Log.StartDumpTime");
+int main(int argc, char **argv) {
+    signal(SIGSEGV, handler);
+#ifdef MIPC_DEBUG
+    debugLog = fopen("mipc.debug", "w");
+    assert(debugLog != NULL);
+#endif
 
-  if (argc > 1) {
-    if (strlen (argv[1]) > SIZE - sizeof(".image")) {
-      fatal_error ("Pathname `%s' too long!\n", argv[1]);
+    Mipc *mh;
+    Decode *dec;
+    Exe *exec;
+    Memory *mem;
+    Mem *m;
+    pipeline = new Pipereg;
+    Writeback *wb;
+    char buf[SIZE];
+    char *fname, *cname;
+    Bool l, c;
+
+    l = FALSE;
+    c = FALSE;
+
+    RegisterDefault("Mipc.BootROM", "mipc.image");
+    RegisterDefault("Mipc.BootPC", (int)0xbfc00000);
+    RegisterDefault("Mipc.ArgvAddr", (int)0xbfc00100);
+    RegisterDefault("Mipc.CacheLineToWatch", 0x1ULL);
+    RegisterDefault("Log.FileName", "mipc.log");
+    RegisterDefault("Log.Level", "");
+    RegisterDefault("MemSystem.Type", "None");
+    RegisterDefault("Log.StartDumpTime", 0);
+    RegisterDefault("Mipc.PeriodicTimer", 100000);
+
+    /* fixup arguments */
+    if (argc > 1) {
+        if (argv[1][0] == '-' && argv[1][1] == 'l') {
+            l = TRUE;
+            argv++;
+            argc--;
+            MALLOC(fname, char, strlen(argv[1]) + 1);
+            sprintf(fname, "%s", argv[1]);
+            argc--;
+            argv++;
+        }
     }
-    sprintf (buf, "%s.image", argv[1]);
-    OverrideConfig ("Mipc.BootROM", buf);
-    argc--;
-    argv++;
-  }
 
-  if (!l) {
-     Log::OpenLog (ParamGetString ("Log.FileName"));
-  }
-  else {
-     Log::OpenLog (fname);
-  }
+    if (argc > 1) {
+        if (argv[1][0] == '-' && argv[1][1] == 'c') {
+            c = TRUE;
+            argv++;
+            argc--;
+            MALLOC(cname, char, strlen(argv[1]) + 1);
+            sprintf(cname, "%s", argv[1]);
+            argc--;
+            argv++;
+            printf("conf file name is %s\n", cname);
+        }
+    }
 
-  m = new Mem();
+    if (!c) {
+        ReadConfigFile();
+    } else {
+        ReadConfigFile(cname);
+    }
 
-  mh = new Mipc(m);
-  dec = new Decode(mh);
-  exec = new Exe(mh);
-  mem = new Memory(mh);
-  wb = new Writeback(mh);
-  SimCreateTask (mh, "FETCH");
-  SimCreateTask (dec, "DECODE");
-  SimCreateTask (exec, "EXE");
-  SimCreateTask (mem, "MEM");
-  SimCreateTask (wb, "WB");
+    logTimer = ParamGetLL("Log.StartDumpTime");
 
-  /* there are arguments! */
-  if (argc > 0) 
-	mh->_sys->ArgumentSetup (argc, argv, ParamGetInt ("Mipc.ArgvAddr"));
+    if (argc > 1) {
+        if (strlen(argv[1]) > SIZE - sizeof(".image")) {
+            fatal_error("Pathname `%s' too long!\n", argv[1]);
+        }
+        sprintf(buf, "%s.image", argv[1]);
+        OverrideConfig("Mipc.BootROM", buf);
+        argc--;
+        argv++;
+    }
 
-  simulate (cleanup);
+    if (!l) {
+        Log::OpenLog(ParamGetString("Log.FileName"));
+    } else {
+        Log::OpenLog(fname);
+    }
+    MSG("Starting initializations");
+    m = new Mem();
+
+    mh = new Mipc(m);
+    dec = new Decode(mh);
+    exec = new Exe(mh);
+    mem = new Memory(mh);
+    wb = new Writeback(mh);
+    SimCreateTask(mh, "FETCH");
+    SimCreateTask(dec, "DECODE");
+    SimCreateTask(exec, "EXE");
+    SimCreateTask(mem, "MEM");
+    SimCreateTask(wb, "WB");
+
+    /* there are arguments! */
+    if (argc > 0)
+        mh->_sys->ArgumentSetup(argc, argv, ParamGetInt("Mipc.ArgvAddr"));
+
+    simulate(cleanup);
 }

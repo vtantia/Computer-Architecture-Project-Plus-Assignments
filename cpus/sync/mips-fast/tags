@@ -1,0 +1,247 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	Development	//
+Bool	mips.h	/^typedef unsigned Bool;$/;"	t
+CORE	Makefile	/^CORE:=mips.o exec_helper.o syscall.o decode.o executor.o memory.o wb.o$/;"	m
+Common	pipereg.h	/^class Common {$/;"	c
+DDBG	common.h	4;"	d
+Dec	exec_helper.cc	/^void Mipc::Dec(unsigned int ins) {$/;"	f	class:Mipc
+Decode	decode.cc	/^Decode::Decode(Mipc *mc) {$/;"	f	class:Decode
+Decode	decode.h	/^class Decode : public SimObject {$/;"	c
+EX_MEM	pipereg.h	/^class EX_MEM : public Common {$/;"	c
+Exe	executor.cc	/^Exe::Exe(Mipc *mc) {$/;"	f	class:Exe
+Exe	executor.h	/^class Exe : public SimObject {$/;"	c
+FAKE_SIM_TEMPLATE	decode.h	/^   FAKE_SIM_TEMPLATE;$/;"	m	class:Decode
+FAKE_SIM_TEMPLATE	executor.h	/^   FAKE_SIM_TEMPLATE;$/;"	m	class:Exe
+FAKE_SIM_TEMPLATE	memory.h	/^   FAKE_SIM_TEMPLATE;$/;"	m	class:Memory
+FAKE_SIM_TEMPLATE	mips.h	/^   FAKE_SIM_TEMPLATE;$/;"	m	class:Mipc
+FAKE_SIM_TEMPLATE	wb.h	/^   FAKE_SIM_TEMPLATE;$/;"	m	class:Writeback
+FALSE	mips.h	12;"	d
+FP_TWIDDLE	mips.h	16;"	d
+FP_TWIDDLE	mips.h	20;"	d
+GetDWord	mips.cc	/^LL MipcSysCall::GetDWord(LL addr) {$/;"	f	class:MipcSysCall
+GetReg	mips.cc	/^LL MipcSysCall::GetReg(int reg) {$/;"	f	class:MipcSysCall
+GetTime	mips.cc	/^LL MipcSysCall::GetTime(void) {$/;"	f	class:MipcSysCall
+GetWord	mips.cc	/^Word MipcSysCall::GetWord(LL addr) {$/;"	f	class:MipcSysCall
+ID_EX	pipereg.h	/^class ID_EX : public Common {$/;"	c
+IF_ID	pipereg.h	/^class IF_ID {$/;"	c
+MEM_WB	pipereg.h	/^class MEM_WB : public Common {$/;"	c
+MIPC	Makefile	/^MIPC:=main.o$/;"	m
+MIPC_DEBUG	mips.h	28;"	d
+MIPC_OFILES	Makefile	/^MIPC_OFILES=$(MIPC) $(CORE)$/;"	m
+MSG	main.cc	/^void MSG(char *a) {$/;"	f
+MainLoop	decode.cc	/^void Decode::MainLoop(void) {$/;"	f	class:Decode
+MainLoop	executor.cc	/^void Exe::MainLoop(void) {$/;"	f	class:Exe
+MainLoop	memory.cc	/^void Memory::MainLoop(void) {$/;"	f	class:Memory
+MainLoop	mips.cc	/^void Mipc::MainLoop(void) {$/;"	f	class:Mipc
+MainLoop	wb.cc	/^void Writeback::MainLoop(void) {$/;"	f	class:Writeback
+Memory	memory.cc	/^Memory::Memory(Mipc *mc) {$/;"	f	class:Memory
+Memory	memory.h	/^class Memory : public SimObject {$/;"	c
+Mipc	mips.cc	/^Mipc::Mipc(Mem *m) : _l('M') {$/;"	f	class:Mipc
+Mipc	mips.h	/^class Mipc : public SimObject {$/;"	c
+MipcDumpstats	mips.cc	/^void Mipc::MipcDumpstats() {$/;"	f	class:Mipc
+MipcSysCall	mips.h	/^   MipcSysCall (Mipc *ms) {$/;"	f	class:MipcSysCall
+MipcSysCall	mips.h	/^class MipcSysCall : public SysCall {$/;"	c
+OFILES	Makefile	/^OFILES:=$(CORE) $(MIPC)$/;"	m
+Pipereg	pipereg.h	/^    Pipereg(){};$/;"	f	class:Pipereg
+Pipereg	pipereg.h	/^class Pipereg {$/;"	c
+Reboot	mips.cc	/^void Mipc::Reboot(char *image) {$/;"	f	class:Mipc
+SIGN_EXTEND_BYTE	exec_helper.cc	31;"	d	file:
+SIGN_EXTEND_IMM	exec_helper.cc	36;"	d	file:
+SIZE	main.cc	15;"	d	file:
+SUBDIRS	Makefile	/^SUBDIRS=$(SIMDIR)\/lib$/;"	m
+SetDWord	mips.cc	/^void MipcSysCall::SetDWord(LL addr, LL data) {$/;"	f	class:MipcSysCall
+SetReg	mips.cc	/^void MipcSysCall::SetReg(int reg, LL val) {$/;"	f	class:MipcSysCall
+SetWord	mips.cc	/^void MipcSysCall::SetWord(LL addr, Word data) {$/;"	f	class:MipcSysCall
+TARGETS	Makefile	/^TARGETS=mipc$/;"	m
+TRUE	mips.h	11;"	d
+VPATH	Makefile	/^VPATH= .:..\/..\/common:$/;"	m
+Writeback	wb.cc	/^Writeback::Writeback(Mipc *mc) {$/;"	f	class:Writeback
+Writeback	wb.h	/^class Writeback : public SimObject {$/;"	c
+_MAR	mips.h	/^   unsigned	_MAR;				\/\/ Memory address register$/;"	m	class:Mipc
+_MAR	pipereg.h	/^    unsigned _MAR;                          \/\/ Memory address register$/;"	m	class:Common
+_PIPEREG_H	pipereg.h	2;"	d
+__DECODE_H__	decode.h	2;"	d
+__EXECUTOR_H__	executor.h	2;"	d
+__MEMORY_H__	memory.h	2;"	d
+__MIPS_H__	mips.h	2;"	d
+__WB_H__	wb.h	2;"	d
+_bd	mips.h	/^   int 		_bd;				\/\/ 1 if the next ins is delay slot$/;"	m	class:Mipc
+_bd	pipereg.h	/^    int _bd;             \/\/ 1 if the next ins is delay slot$/;"	m	class:Common
+_boot	mips.h	/^   unsigned int _boot;				\/\/ boot code loaded?$/;"	m	class:Mipc
+_boot	pipereg.h	/^    unsigned int _boot;     \/\/ boot code loaded?$/;"	m	class:Common
+_branchOffset	mips.h	/^   signed int	_branchOffset;$/;"	m	class:Mipc
+_branchOffset	pipereg.h	/^    signed int _branchOffset;$/;"	m	class:Common
+_btaken	mips.h	/^   int 		_btaken; 			\/\/ taken branch (1 if taken, 0 if fall-through)$/;"	m	class:Mipc
+_btaken	pipereg.h	/^    int _btaken;         \/\/ taken branch (1 if taken, 0 if fall-through)$/;"	m	class:Common
+_btgt	mips.h	/^   unsigned int	_btgt;				\/\/ branch target$/;"	m	class:Mipc
+_btgt	pipereg.h	/^    unsigned int _btgt;  \/\/ branch target$/;"	m	class:Common
+_debugLog	mips.h	/^   FILE *_debugLog;$/;"	m	class:Mipc
+_decodeValid	mips.h	/^   Bool         _decodeValid;   \/\/ Needed for unpipelined design$/;"	m	class:Mipc
+_decodedDST	mips.h	/^   unsigned	_decodedDST;			\/\/ Decoder output (dest reg no)$/;"	m	class:Mipc
+_decodedDST	pipereg.h	/^    unsigned _decodedDST;                   \/\/ Decoder output (dest reg no)$/;"	m	class:Common
+_decodedSRC1	mips.h	/^   signed int	_decodedSRC1, _decodedSRC2;	\/\/ Reg fetch output (source values)$/;"	m	class:Mipc
+_decodedSRC1	pipereg.h	/^    signed int _decodedSRC1, _decodedSRC2;  \/\/ Reg fetch output (source values)$/;"	m	class:Common
+_decodedSRC2	mips.h	/^   signed int	_decodedSRC1, _decodedSRC2;	\/\/ Reg fetch output (source values)$/;"	m	class:Mipc
+_decodedSRC2	pipereg.h	/^    signed int _decodedSRC1, _decodedSRC2;  \/\/ Reg fetch output (source values)$/;"	m	class:Common
+_decodedShiftAmt	mips.h	/^   unsigned	_decodedShiftAmt;		\/\/ Shift amount$/;"	m	class:Mipc
+_decodedShiftAmt	pipereg.h	/^    unsigned _decodedShiftAmt;  \/\/ Shift amount$/;"	m	class:Common
+_execValid	mips.h	/^   Bool		_execValid;	\/\/ Needed for unpipelined design$/;"	m	class:Mipc
+_fpinst	mips.h	/^   LL   _fpinst;$/;"	m	class:Mipc
+_fpr	mips.h	/^   } _fpr[16];					\/\/ floating-point registers (paired)$/;"	m	class:Mipc	typeref:union:Mipc::__anon1
+_gpr	mips.h	/^   unsigned int 	_gpr[32];		\/\/ general-purpose integer registers$/;"	m	class:Mipc
+_hi	mips.h	/^   unsigned int _hi, _lo; 			\/\/ mult, div destination$/;"	m	class:Mipc
+_hi	pipereg.h	/^    unsigned int _hi, _lo;  \/\/ mult, div destination$/;"	m	class:Common
+_hiWPort	mips.h	/^   Bool 	_hiWPort, _loWPort;		\/\/ WB control$/;"	m	class:Mipc
+_hiWPort	pipereg.h	/^    Bool _hiWPort, _loWPort;    \/\/ WB control$/;"	m	class:Common
+_ins	mips.h	/^   unsigned int _ins;   \/\/ instruction register$/;"	m	class:Mipc
+_ins	pipereg.h	/^    unsigned int _ins;  \/\/ instruction register$/;"	m	class:Common
+_ins	pipereg.h	/^    unsigned int _ins;$/;"	m	class:IF_ID
+_insDone	mips.h	/^   Bool         _insDone;       \/\/ Needed for unpipelined design$/;"	m	class:Mipc
+_insValid	mips.h	/^   Bool         _insValid;      \/\/ Needed for unpipelined design$/;"	m	class:Mipc
+_isIllegalOp	mips.h	/^   Bool		_isIllegalOp;			\/\/ 1 if illegal opcode$/;"	m	class:Mipc
+_isIllegalOp	pipereg.h	/^    Bool _isIllegalOp;  \/\/ 1 if illegal opcode$/;"	m	class:Common
+_isSyscall	mips.h	/^   Bool		_isSyscall;			\/\/ 1 if system call$/;"	m	class:Mipc
+_isSyscall	pipereg.h	/^    Bool _isSyscall;    \/\/ 1 if system call$/;"	m	class:Common
+_l	mips.h	/^   Log	_l;$/;"	m	class:Mipc
+_lastbd	mips.h	/^   unsigned int _lastbd;			\/\/ branch delay state$/;"	m	class:Mipc
+_lastbd	pipereg.h	/^    unsigned int _lastbd;   \/\/ branch delay state$/;"	m	class:Common
+_lo	mips.h	/^   unsigned int _hi, _lo; 			\/\/ mult, div destination$/;"	m	class:Mipc
+_lo	pipereg.h	/^    unsigned int _hi, _lo;  \/\/ mult, div destination$/;"	m	class:Common
+_loWPort	mips.h	/^   Bool 	_hiWPort, _loWPort;		\/\/ WB control$/;"	m	class:Mipc
+_loWPort	pipereg.h	/^    Bool _hiWPort, _loWPort;    \/\/ WB control$/;"	m	class:Common
+_mc	decode.h	/^   Mipc *_mc;$/;"	m	class:Decode
+_mc	executor.h	/^   Mipc *_mc;$/;"	m	class:Exe
+_mc	memory.h	/^   Mipc *_mc;$/;"	m	class:Memory
+_mc	wb.h	/^   Mipc *_mc;$/;"	m	class:Writeback
+_mem	mips.h	/^   Mem	*_mem;	\/\/ attached memory (not a cache)$/;"	m	class:Mipc
+_memControl	mips.h	/^   Bool 	_memControl;			\/\/ Memory instruction?$/;"	m	class:Mipc
+_memControl	pipereg.h	/^    Bool _memControl;                       \/\/ Memory instruction?$/;"	m	class:Common
+_memOp	mips.h	/^   void (*_memOp)(Mipc*);$/;"	m	class:Mipc
+_memOp	pipereg.h	/^    void (*_memOp)(Mipc *);$/;"	m	class:Common
+_memValid	mips.h	/^   Bool		_memValid;	\/\/ Needed for unpipelined design$/;"	m	class:Mipc
+_ms	mips.h	/^   Mipc *_ms;$/;"	m	class:MipcSysCall
+_nfetched	mips.h	/^   LL	_nfetched;$/;"	m	class:Mipc
+_num_cond_br	mips.h	/^   LL	_num_cond_br;$/;"	m	class:Mipc
+_num_jal	mips.h	/^   LL	_num_jal;$/;"	m	class:Mipc
+_num_jr	mips.h	/^   LL	_num_jr;$/;"	m	class:Mipc
+_num_load	mips.h	/^   LL   _num_load;$/;"	m	class:Mipc
+_num_store	mips.h	/^   LL   _num_store;$/;"	m	class:Mipc
+_opControl	mips.h	/^   void (*_opControl)(Mipc*, unsigned);$/;"	m	class:Mipc
+_opControl	pipereg.h	/^    void (*_opControl)(Mipc *, unsigned);$/;"	m	class:Common
+_opResultHi	mips.h	/^   unsigned	_opResultHi, _opResultLo;	\/\/ Result of operation$/;"	m	class:Mipc
+_opResultHi	pipereg.h	/^    unsigned _opResultHi, _opResultLo;      \/\/ Result of operation$/;"	m	class:Common
+_opResultLo	mips.h	/^   unsigned	_opResultHi, _opResultLo;	\/\/ Result of operation$/;"	m	class:Mipc
+_opResultLo	pipereg.h	/^    unsigned _opResultHi, _opResultLo;      \/\/ Result of operation$/;"	m	class:Common
+_pc	mips.h	/^   unsigned int	_pc;				\/\/ Program counter$/;"	m	class:Mipc
+_pc	pipereg.h	/^    unsigned int _pc;       \/\/ Program counter$/;"	m	class:Common
+_sim_exit	mips.h	/^   int  _sim_exit;		\/\/ 1 on normal termination$/;"	m	class:Mipc
+_subregOperand	mips.h	/^   unsigned 	_subregOperand;			\/\/ Needed for lwl and lwr$/;"	m	class:Mipc
+_subregOperand	pipereg.h	/^    unsigned _subregOperand;                \/\/ Needed for lwl and lwr$/;"	m	class:Common
+_sys	mips.h	/^   MipcSysCall *_sys;		\/\/ Emulated system call layer$/;"	m	class:Mipc
+_writeFREG	mips.h	/^   Bool		_writeREG, _writeFREG;		\/\/ WB control$/;"	m	class:Mipc
+_writeFREG	pipereg.h	/^    Bool _writeREG, _writeFREG;             \/\/ WB control$/;"	m	class:Common
+_writeREG	mips.h	/^   Bool		_writeREG, _writeFREG;		\/\/ WB control$/;"	m	class:Mipc
+_writeREG	pipereg.h	/^    Bool _writeREG, _writeFREG;             \/\/ WB control$/;"	m	class:Common
+cleanup	main.cc	/^void cleanup(void) {$/;"	f
+copyFromMc	pipereg.cc	/^void Common::copyFromMc(Mipc *mc) {$/;"	f	class:Common
+copyFromPipe	pipereg.cc	/^void Common::copyFromPipe(Common *pipe) {$/;"	f	class:Common
+d	mips.h	/^      double d;$/;"	m	union:Mipc::__anon1
+dumpregs	exec_helper.cc	/^void Mipc::dumpregs(void) {$/;"	f	class:Mipc
+ex_mem	pipereg.h	/^    EX_MEM ex_mem;$/;"	m	class:Pipereg
+ex_pipe	executor.cc	/^ID_EX ex_pipe;$/;"	v
+f	mips.h	/^      float f[2];$/;"	m	union:Mipc::__anon1
+fake_syscall	mips.cc	/^void Mipc::fake_syscall(unsigned int ins) {$/;"	f	class:Mipc
+func_add_addu	exec_helper.cc	/^void Mipc::func_add_addu(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_addi_addiu	exec_helper.cc	/^void Mipc::func_addi_addiu(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_and	exec_helper.cc	/^void Mipc::func_and(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_andi	exec_helper.cc	/^void Mipc::func_andi(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_await_break	exec_helper.cc	/^void Mipc::func_await_break(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_beq	exec_helper.cc	/^void Mipc::func_beq(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_bgez	exec_helper.cc	/^void Mipc::func_bgez(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_bgezal	exec_helper.cc	/^void Mipc::func_bgezal(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_bgtz	exec_helper.cc	/^void Mipc::func_bgtz(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_blez	exec_helper.cc	/^void Mipc::func_blez(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_bltz	exec_helper.cc	/^void Mipc::func_bltz(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_bltzal	exec_helper.cc	/^void Mipc::func_bltzal(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_bne	exec_helper.cc	/^void Mipc::func_bne(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_div	exec_helper.cc	/^void Mipc::func_div(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_divu	exec_helper.cc	/^void Mipc::func_divu(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_j	exec_helper.cc	/^void Mipc::func_j(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_jal	exec_helper.cc	/^void Mipc::func_jal(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_jalr	exec_helper.cc	/^void Mipc::func_jalr(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_jr	exec_helper.cc	/^void Mipc::func_jr(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_lb	exec_helper.cc	/^void Mipc::func_lb(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_lbu	exec_helper.cc	/^void Mipc::func_lbu(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_lh	exec_helper.cc	/^void Mipc::func_lh(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_lhu	exec_helper.cc	/^void Mipc::func_lhu(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_lui	exec_helper.cc	/^void Mipc::func_lui(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_lw	exec_helper.cc	/^void Mipc::func_lw(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_lwc1	exec_helper.cc	/^void Mipc::func_lwc1(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_lwl	exec_helper.cc	/^void Mipc::func_lwl(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_lwr	exec_helper.cc	/^void Mipc::func_lwr(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_mfc1	exec_helper.cc	/^void Mipc::func_mfc1(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_mfhi	exec_helper.cc	/^void Mipc::func_mfhi(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_mflo	exec_helper.cc	/^void Mipc::func_mflo(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_mtc1	exec_helper.cc	/^void Mipc::func_mtc1(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_mthi	exec_helper.cc	/^void Mipc::func_mthi(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_mtlo	exec_helper.cc	/^void Mipc::func_mtlo(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_mult	exec_helper.cc	/^void Mipc::func_mult(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_multu	exec_helper.cc	/^void Mipc::func_multu(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_nor	exec_helper.cc	/^void Mipc::func_nor(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_or	exec_helper.cc	/^void Mipc::func_or(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_ori	exec_helper.cc	/^void Mipc::func_ori(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_sb	exec_helper.cc	/^void Mipc::func_sb(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_sh	exec_helper.cc	/^void Mipc::func_sh(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_sll	exec_helper.cc	/^void Mipc::func_sll(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_sllv	exec_helper.cc	/^void Mipc::func_sllv(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_slt	exec_helper.cc	/^void Mipc::func_slt(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_slti	exec_helper.cc	/^void Mipc::func_slti(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_sltiu	exec_helper.cc	/^void Mipc::func_sltiu(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_sltu	exec_helper.cc	/^void Mipc::func_sltu(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_sra	exec_helper.cc	/^void Mipc::func_sra(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_srav	exec_helper.cc	/^void Mipc::func_srav(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_srl	exec_helper.cc	/^void Mipc::func_srl(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_srlv	exec_helper.cc	/^void Mipc::func_srlv(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_sub_subu	exec_helper.cc	/^void Mipc::func_sub_subu(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_sw	exec_helper.cc	/^void Mipc::func_sw(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_swc1	exec_helper.cc	/^void Mipc::func_swc1(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_swl	exec_helper.cc	/^void Mipc::func_swl(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_swr	exec_helper.cc	/^void Mipc::func_swr(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_syscall	exec_helper.cc	/^void Mipc::func_syscall(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_xor	exec_helper.cc	/^void Mipc::func_xor(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+func_xori	exec_helper.cc	/^void Mipc::func_xori(Mipc *mc, unsigned ins) {$/;"	f	class:Mipc
+get_value	extract.pl	/^sub get_value {$/;"	s
+handler	main.cc	/^void handler(int sig) {$/;"	f
+id_ex	pipereg.h	/^    ID_EX id_ex;$/;"	m	class:Pipereg
+if_id	pipereg.h	/^    IF_ID if_id;$/;"	m	class:Pipereg
+l	mips.h	/^      unsigned int l[2];$/;"	m	union:Mipc::__anon1
+load_data	extract.pl	/^sub load_data {$/;"	s
+main	main.cc	/^int main(int argc, char **argv) {$/;"	f
+mem_lb	exec_helper.cc	/^void Mipc::mem_lb(Mipc *mc) {$/;"	f	class:Mipc
+mem_lbu	exec_helper.cc	/^void Mipc::mem_lbu(Mipc *mc) {$/;"	f	class:Mipc
+mem_lh	exec_helper.cc	/^void Mipc::mem_lh(Mipc *mc) {$/;"	f	class:Mipc
+mem_lhu	exec_helper.cc	/^void Mipc::mem_lhu(Mipc *mc) {$/;"	f	class:Mipc
+mem_lw	exec_helper.cc	/^void Mipc::mem_lw(Mipc *mc) {$/;"	f	class:Mipc
+mem_lwc1	exec_helper.cc	/^void Mipc::mem_lwc1(Mipc *mc) {$/;"	f	class:Mipc
+mem_lwl	exec_helper.cc	/^void Mipc::mem_lwl(Mipc *mc) {$/;"	f	class:Mipc
+mem_lwr	exec_helper.cc	/^void Mipc::mem_lwr(Mipc *mc) {$/;"	f	class:Mipc
+mem_sb	exec_helper.cc	/^void Mipc::mem_sb(Mipc *mc) {$/;"	f	class:Mipc
+mem_sh	exec_helper.cc	/^void Mipc::mem_sh(Mipc *mc) {$/;"	f	class:Mipc
+mem_sw	exec_helper.cc	/^void Mipc::mem_sw(Mipc *mc) {$/;"	f	class:Mipc
+mem_swc1	exec_helper.cc	/^void Mipc::mem_swc1(Mipc *mc) {$/;"	f	class:Mipc
+mem_swl	exec_helper.cc	/^void Mipc::mem_swl(Mipc *mc) {$/;"	f	class:Mipc
+mem_swr	exec_helper.cc	/^void Mipc::mem_swr(Mipc *mc) {$/;"	f	class:Mipc
+mem_wb	pipereg.h	/^    MEM_WB mem_wb;$/;"	m	class:Pipereg
+pipeline	main.cc	/^Pipereg *pipeline;$/;"	v
+pow	extract.pl	/^sub pow {$/;"	s
+~Decode	decode.cc	/^Decode::~Decode(void) {$/;"	f	class:Decode
+~Exe	executor.cc	/^Exe::~Exe(void) {$/;"	f	class:Exe
+~Memory	memory.cc	/^Memory::~Memory(void) {$/;"	f	class:Memory
+~Mipc	mips.cc	/^Mipc::~Mipc(void) {$/;"	f	class:Mipc
+~MipcSysCall	mips.h	/^   ~MipcSysCall () { };$/;"	f	class:MipcSysCall
+~Pipereg	pipereg.h	/^    ~Pipereg(){};$/;"	f	class:Pipereg
+~Writeback	wb.cc	/^Writeback::~Writeback(void) {$/;"	f	class:Writeback

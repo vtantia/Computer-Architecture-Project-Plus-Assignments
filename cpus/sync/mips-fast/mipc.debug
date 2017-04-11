@@ -1,0 +1,7 @@
+<0> Illegal ins 0 in execution stage at PC 0x1fc00000
+<0> Fetched ins 0x4000 from PC 0x1fc00000
+<0> Memory has nothing to do for ins 0x3c1d7fff
+<0> Decoded ins 0
+<1> Executed ins 0
+<1> Decoded ins 0x3c1d7fff
+<1> Fetched ins 0x3c1d7fff from PC 0x1fc00004

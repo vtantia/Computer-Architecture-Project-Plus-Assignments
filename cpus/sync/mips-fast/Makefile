@@ -23,7 +23,7 @@ SUBDIRS=$(SIMDIR)/lib
 # extra flags used for simulation stuff... synchronous simulation env
 MORECFLAGS+=-DSYNCHRONOUS -DMIPS_FAST -I../../common $(GTK_FLAGS) -Wno-deprecated -include /usr/include/errno.h
 
-CORE:=mips.o exec_helper.o syscall.o decode.o executor.o memory.o wb.o
+CORE:=mips.o exec_helper.o syscall.o decode.o executor.o memory.o wb.o pipereg.o
 MIPC:=main.o
 
 MIPC_OFILES=$(MIPC) $(CORE)
@@ -34,5 +34,5 @@ include $(SIMDIR)/Tools/mk/Makefile.std
 
 mipc: $(MIPC_OFILES) $(LDEP) $(LIBS)
 	$(ECHO) "Linking $@..."
-	$(CXX) -o $@ $(MIPC_OFILES) $(LFLAGS) $(LIBS) -lsim
+	$(CXX) -g -rdynamic -o $@ $(MIPC_OFILES) $(LFLAGS) $(LIBS) -lsim
 endif

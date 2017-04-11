@@ -1,58 +1,66 @@
 #include "executor.h"
+#include "common.h"
 
-Exe::Exe (Mipc *mc)
-{
-   _mc = mc;
+Exe::Exe(Mipc *mc) {
+    _mc = mc;
+    memset(&pipeline->ex_mem, 0, sizeof(pipeline->ex_mem));
 }
 
-Exe::~Exe (void) {}
+Exe::~Exe(void) {
+}
 
-void
-Exe::MainLoop (void)
-{
-   unsigned int ins;
-   Bool isSyscall, isIllegalOp;
+ID_EX ex_pipe;
 
-   while (1) {
-      AWAIT_P_PHI0;	// @posedge
-      if (_mc->_decodeValid) {
-         ins = _mc->_ins;
-         isSyscall = _mc->_isSyscall;
-         isIllegalOp = _mc->_isIllegalOp;
-         AWAIT_P_PHI1;	// @negedge
-         if (!isSyscall && !isIllegalOp) {
-            _mc->_opControl(_mc,ins);
-#ifdef MIPC_DEBUG
-            fprintf(_mc->_debugLog, "<%llu> Executed ins %#x\n", SIM_TIME, ins);
-#endif
-         }
-         else if (isSyscall) {
-#ifdef MIPC_DEBUG
-            fprintf(_mc->_debugLog, "<%llu> Deferring execution of syscall ins %#x\n", SIM_TIME, ins);
-#endif
-         }
-         else {
-#ifdef MIPC_DEBUG
-            fprintf(_mc->_debugLog, "<%llu> Illegal ins %#x in execution stage at PC %#x\n", SIM_TIME, ins, _mc->_pc);
-#endif
-         }
-         _mc->_decodeValid = FALSE;
-         _mc->_execValid = TRUE;
+void Exe::MainLoop(void) {
+    unsigned int ins;
+    Bool isSyscall, isIllegalOp;
 
-         if (!isIllegalOp && !isSyscall) {
-            if (_mc->_lastbd && _mc->_btaken)
-            {
-               _mc->_pc = _mc->_btgt;
+    while (1) {
+        if (true) {
+            DDBG;
+            AWAIT_P_PHI0;  // @posedge
+            DDBG;
+            ex_pipe = pipeline->id_ex;
+            ins = ex_pipe._ins;
+            isSyscall = ex_pipe._isSyscall;
+            isIllegalOp = ex_pipe._isIllegalOp;
+
+            if (!isSyscall && !isIllegalOp) {
+                ex_pipe._opControl(_mc, ins);
+#ifdef MIPC_DEBUG
+                fprintf(debugLog, "<%llu> Executed ins %#x\n", SIM_TIME, ins);
+#endif
+            } else if (isSyscall) {
+#ifdef MIPC_DEBUG
+                fprintf(debugLog, "<%llu> Deferring execution of syscall ins %#x\n",
+                        SIM_TIME, ins);
+#endif
+            } else {
+#ifdef MIPC_DEBUG
+                fprintf(debugLog, "<%llu> Illegal ins %#x in execution stage at PC %#x\n",
+                        SIM_TIME, ins, _mc->_pc);
+#endif
             }
-            else
-            {
-               _mc->_pc = _mc->_pc + 4;
+            //_mc->_decodeValid = FALSE;
+            //_mc->_execValid = TRUE;
+
+            if (!isIllegalOp && !isSyscall) {
+                if (_mc->_lastbd && _mc->_btaken) {
+                    _mc->_pc = _mc->_btgt;
+                } else {
+                    _mc->_pc = _mc->_pc + 4;
+                }
+                _mc->_lastbd = _mc->_bd;
             }
-            _mc->_lastbd = _mc->_bd;
-         }
-      }
-      else {
-         PAUSE(1);
-      }
-   }
+
+            DDBG;
+            AWAIT_P_PHI1;  // @negedge
+            DDBG;
+            pipeline->ex_mem._ins = ins;
+            pipeline->ex_mem._memControl = _mc->_memControl;
+            pipeline->ex_mem._memOp = _mc->_memOp;
+        } else {
+            PAUSE(1);
+        }
+    }
 }
