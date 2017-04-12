@@ -21,6 +21,15 @@ void Exe::MainLoop(void) {
             DDBG;
             AWAIT_P_PHI0;  // @posedge
             DDBG;
+
+            if (pipeline->id_ex._skipExec) {
+                AWAIT_P_PHI1;  // @negedge
+                pipeline->id_ex._skipExec = false;
+
+                pipeline->ex_mem._kill = true;
+                continue;
+            }
+
             ex_pipe = pipeline->id_ex;
             ins = pipeline->id_ex._ins;
 
@@ -28,7 +37,25 @@ void Exe::MainLoop(void) {
             isIllegalOp = ex_pipe._isIllegalOp;
 
             if (!isSyscall && !isIllegalOp) {
+                // TODO: Think about _lo, _hi
+                pipeline->getBypassValue(
+                    ex_pipe._rs,
+                    &(ex_pipe._decodedSRC1));
+
+                pipeline->getBypassValue(
+                    ex_pipe._rt,
+                    &(ex_pipe._decodedSRC2));
+
+                // Run pipe
                 ex_pipe._opControl(_mc, ins);
+
+                if (!ex_pipe._memControl && ex_pipe._writeREG) {
+                    pipeline->ex_mem.bypass.storeValueFromEx(
+                        ex_pipe._opResultLo, ex_pipe._decodedDST);
+                } else {
+                    pipeline->ex_mem.bypass.invalidateEx();
+                }
+
 #ifdef MIPC_DEBUG
                 fprintf(debugLog, "<%llu> Executed ins %#x\n", SIM_TIME, ins);
 #endif

@@ -25,6 +25,7 @@ void Mipc::MainLoop(void) {
 
     while (!_sim_exit) {
         if (!pipeline->if_id._fetch_kill) {
+
             DDBG;
             AWAIT_P_PHI0;  // @posedge
             DDBG;
@@ -32,6 +33,7 @@ void Mipc::MainLoop(void) {
             DDBG;
             AWAIT_P_PHI1;  // @negedge
             DDBG;
+
 #ifdef MIPC_DEBUG
             fprintf(debugLog, "<%llu> Fetched ins %#x from PC %#x\n", SIM_TIME, ins, _pc);
 #endif
@@ -50,6 +52,7 @@ void Mipc::MainLoop(void) {
             _bd = 0;
 
             pipeline->if_id._kill = FALSE;
+
         } else {
             AWAIT_P_PHI0;  // @posedge
             AWAIT_P_PHI1;  // @negedge

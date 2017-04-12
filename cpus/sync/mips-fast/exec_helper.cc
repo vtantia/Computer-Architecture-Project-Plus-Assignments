@@ -28,6 +28,8 @@ void Mipc::Dec(unsigned int ins) {
     _isSyscall = FALSE;
 
     i.data = ins;
+    _rs = i.reg.rs;
+    _rt = i.reg.rt;
 
 #define SIGN_EXTEND_BYTE(x) \
     do {                    \

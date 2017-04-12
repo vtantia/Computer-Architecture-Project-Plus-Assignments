@@ -1,6 +1,13 @@
 #include "common.h"
 
+Bypass::Bypass() {
+    valid1 = false;
+    valid2 = false;
+}
+
 void Common::copyFromMc(Mipc *mc) {
+    _rs = mc->_rs;
+    _rt = mc->_rt;
     _ins = mc->_ins;
     _decodedSRC1 = mc->_decodedSRC1;
     _decodedSRC2 = mc->_decodedSRC2;
@@ -34,6 +41,9 @@ void Common::copyFromMc(Mipc *mc) {
 }
 
 void Common::copyFromPipe(Common *pipe) {
+    _rs = pipe->_rs;
+    _rt = pipe->_rt;
+
     _ins = pipe->_ins;
     _decodedSRC1 = pipe->_decodedSRC1;
     _decodedSRC2 = pipe->_decodedSRC2;
@@ -64,4 +74,14 @@ void Common::copyFromPipe(Common *pipe) {
 
     _opControl = pipe->_opControl;
     _memOp = pipe->_memOp;
+}
+
+void Pipereg::getBypassValue(int kaunsaReg, int *kidharStore) {
+    bool didIGetFromMemBypass =
+        pipeline->mem_wb.bypass.canIGetNewValueOfReg(
+            kaunsaReg, kidharStore);
+    if (!didIGetFromMemBypass) {
+        pipeline->ex_mem.bypass.canIGetNewValueOfReg(
+            kaunsaReg, kidharStore);
+    }
 }

@@ -13,5 +13,7 @@ public:
    FAKE_SIM_TEMPLATE;
 
    Mipc *_mc;
+
+   bool Decode::doesThisRegHaveHazard(int reg, int ins);
 };
 #endif

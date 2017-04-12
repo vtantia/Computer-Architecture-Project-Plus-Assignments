@@ -47,6 +47,7 @@ void Writeback::MainLoop(void) {
                         SIM_TIME, _mc->_pc);
 #endif
                 _mc->_opControl(_mc, ins);
+                // MAGIC HERE. Please check
                 //_mc->_pc += 4;
             } else if (isIllegalOp) {
                 printf("Illegal ins %#x at PC %#x. Terminating simulation!\n", ins,

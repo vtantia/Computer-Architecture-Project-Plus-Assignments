@@ -3,10 +3,54 @@
 
 #include "mips.h"
 
+class Bypass {
+public:
+    int storedReg1, storedReg2;
+    int storedVal1, storedVal2;
+
+    bool valid1, valid2;
+
+    Bypass();
+
+    void storeValueFromEx(int reg, int val) {
+        storedReg1 = reg;
+        storedVal1 = val;
+        valid1 = true;
+    }
+
+    void storeValueFromMem(int reg, int val) {
+        storedReg2 = reg;
+        storedVal2 = val;
+        valid2 = true;
+    }
+
+    void invalidateEx() {
+        valid1 = false;
+    }
+
+    void invalidateMem() {
+        valid2 = false;
+    }
+
+    bool canIGetNewValueOfReg(int reg, int *val) {
+        if (storedReg1 == reg && valid1) {
+            *val = storedVal1;
+            return true;
+        }
+        if (storedReg2 == reg && valid2) {
+            *val = storedVal2;
+            return true;
+        }
+        return false;
+    }
+};
+
 class Common {
 public:
     /* processor state */
     unsigned int _ins;  // instruction register
+
+    int _rs, _rt;
 
     signed int _decodedSRC1, _decodedSRC2;  // Reg fetch output (source values)
     unsigned _decodedDST;                   // Decoder output (dest reg no)
@@ -50,14 +94,17 @@ public:
 
 class ID_EX : public Common {
 public:
+    bool _skipExec;     // Have to skip the next EXEC phase
 };
 
 class EX_MEM : public Common {
 public:
+    Bypass bypass;
 };
 
 class MEM_WB : public Common {
 public:
+    Bypass bypass;
 };
 
 class Pipereg {
@@ -76,6 +123,8 @@ public:
 
     // Memory phase / Write back Pipeline register
     MEM_WB mem_wb;
+
+    void getBypassValue(int kaunsaReg, int *kidharStore);
 };
 
 #endif

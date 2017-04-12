@@ -55,6 +55,7 @@ public:
    Bool		_memValid;	// Needed for unpipelined design
    Bool         _insDone;       // Needed for unpipelined design
 
+   int _rs, _rt;
    signed int	_decodedSRC1, _decodedSRC2;	// Reg fetch output (source values)
    unsigned	_decodedDST;			// Decoder output (dest reg no)
    unsigned 	_subregOperand;			// Needed for lwl and lwr
