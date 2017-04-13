@@ -2,6 +2,7 @@
 #define __MIPS_H__
 
 #include "sim.h"
+#include <string>
 
 class Mipc;
 class MipcSysCall;
@@ -64,6 +65,10 @@ public:
     unsigned     _decodedShiftAmt;           // Shift amount
 
     unsigned int *_gpr;                      // general-purpose integer registers
+
+    std::string insname;
+    int position;
+    int src1, src2, subreg;
 
     union {
         unsigned int l[2];

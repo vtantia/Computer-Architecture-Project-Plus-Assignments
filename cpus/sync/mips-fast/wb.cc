@@ -21,13 +21,15 @@ void Writeback::MainLoop(void) {
 
     while (1) {
         // Sample the important signals
+        AWAIT_P_PHI0;
         if (!pipeline->mem_wb._kill) {
-
-            AWAIT_P_PHI0;  // @posedge
 
             Mipc local_mc = pipeline->mem_wb.mc;
 
             ins = local_mc._ins;
+
+            cout << "No Insn " << pipeline->mem_wb.mc._pc << endl;
+            int pos = pipeline->mem_wb.mc.position;
 
             if (isSyscall) {
 
@@ -50,8 +52,11 @@ void Writeback::MainLoop(void) {
 
             } else {
 
+                cout << "Insn " << ins << " at pc " << local_mc._pc << " writeback " << local_mc._writeREG << endl;
                 if (local_mc._writeREG) {
                     _mc->_gpr[local_mc._decodedDST] = local_mc._opResultLo;
+                    cout << "Insn " << ins << " at pc " << local_mc._pc << " writes " <<
+                        local_mc._opResultLo << " to register " << local_mc._decodedDST << endl;
 
                     DBG((debugLog, "<%llu> Writing to reg %u, value: %#x\n", SIM_TIME,
                          local_mc._decodedDST, local_mc._opResultLo));
@@ -82,12 +87,21 @@ void Writeback::MainLoop(void) {
 
             AWAIT_P_PHI1;  // @negedge
 
+            if (!local_mc._isSyscall && !local_mc._isIllegalOp) {
+                if (local_mc._writeREG) {
+                    INLOG((inlog, "%3d |WB |: Writing to %d value %d\n", pos, local_mc._decodedDST, local_mc._opResultLo));
+                }
+            }
+
             if (local_mc._isSyscall) {
                 pipeline->if_id._fetch_kill = FALSE;
+                INLOG((inlog, "%3d |WB |: SYSCALL FINISHED\n", pos));
             }
 
         } else {
-            PAUSE(1);
+            int pos = pipeline->mem_wb.mc.position;
+            AWAIT_P_PHI1;  // @negedge
+            INLOG((inlog, "%3d |WB |: Dead\n", pos));
         }
     }
 }

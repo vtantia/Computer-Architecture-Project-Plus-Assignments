@@ -16,6 +16,10 @@ void cleanup(void) {
 
 Pipereg *pipeline;
 
+FILE *inlog = fopen("inslog", "w");
+
+int cycleId = 0;
+
 void MSG(char *a) {
     fprintf(stdout, "%s\n", a);
 }

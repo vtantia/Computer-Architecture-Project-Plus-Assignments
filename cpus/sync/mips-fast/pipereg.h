@@ -3,6 +3,9 @@
 
 #include "mips.h"
 
+#define INLOG(a) {fprintf a ; fflush(inlog); }
+extern FILE *inlog;
+
 class Bypass {
 public:
     int storedReg1, storedReg2;
@@ -12,13 +15,17 @@ public:
 
     Bypass();
 
-    void storeValueFromEx(int reg, int val) {
+    void storeValueFromEx(int val, int reg) {
+        INLOG((inlog, "    |BYX|: Storing into reg %d value %d\n",
+               reg, val));
         storedReg1 = reg;
         storedVal1 = val;
         valid1 = true;
     }
 
-    void storeValueFromMem(int reg, int val) {
+    void storeValueFromMem(int val, int reg) {
+        INLOG((inlog, "    |BYM|: Storing into reg %d value %d\n",
+               reg, val));
         storedReg2 = reg;
         storedVal2 = val;
         valid2 = true;
@@ -34,10 +41,14 @@ public:
 
     bool canIGetNewValueOfReg(int reg, int *val) {
         if (storedReg1 == reg && valid1) {
+            INLOG((inlog, "    |BYP|: Requested reg %d, got value %d\n",
+                   reg, storedVal1));
             *val = storedVal1;
             return true;
         }
         if (storedReg2 == reg && valid2) {
+            INLOG((inlog, "    |BYP|: Requested reg %d, got value %d\n",
+                   reg, storedVal2));
             *val = storedVal2;
             return true;
         }
@@ -46,10 +57,14 @@ public:
 
     bool canIGetNewValueOfRegUnsigned(int reg, unsigned int *val) {
         if (storedReg1 == reg && valid1) {
+            INLOG((inlog, "    |BYP|: Requested reg %d, got value %d\n",
+                   reg, storedVal1));
             *val = storedVal1;
             return true;
         }
         if (storedReg2 == reg && valid2) {
+            INLOG((inlog, "    |BYP|: Requested reg %d, got value %d\n",
+                   reg, storedVal2));
             *val = storedVal2;
             return true;
         }
@@ -117,15 +132,10 @@ public:
     bool _skipExec;     // Have to skip the next EXEC phase
     Mipc mc;
 
-    int src1, src2, subreg;
-
     ID_EX(Mipc *mh) {
         mc = *mh;
         _kill = true;
         _skipExec = false;
-        src1 = -1;
-        src2 = -1;
-        subreg = -1;
     }
 };
 
@@ -137,6 +147,7 @@ public:
     EX_MEM(Mipc *mh) {
         mc = *mh;
         _kill = true;
+        mc._pc = 0;
     }
 };
 
@@ -148,6 +159,7 @@ public:
     MEM_WB(Mipc *mh) {
         mc = *mh;
         _kill = true;
+        mc._pc = 0;
     }
 };
 

@@ -4,6 +4,8 @@
 #include "opcodes.h"
 #include "app_syscall.h"
 
+extern FILE *inlog;
+
 Decode::Decode(Mipc *mc) {
     _mc = mc;
 }
@@ -71,14 +73,14 @@ bool Decode::doesThisRegHaveHazard(int reg, int ins) {
             break;
     }
 
-    pipeline->id_ex.src1 = onesrc;
-    pipeline->id_ex.src2 = twosrc;
+    pipeline->id_ex.mc.src1 = onesrc;
+    pipeline->id_ex.mc.src2 = twosrc;
 
     // Handling subreg cases separately
     if (subreg) {
-        pipeline->id_ex.subreg = twosrc;
+        pipeline->id_ex.mc.subreg = twosrc;
     } else {
-        pipeline->id_ex.subreg = -1;
+        pipeline->id_ex.mc.subreg = -1;
     }
 
     return !(reg != onesrc && reg != twosrc);
@@ -86,15 +88,16 @@ bool Decode::doesThisRegHaveHazard(int reg, int ins) {
 
 void Decode::MainLoop(void) {
     unsigned int ins;
+    int _nfetched = 0, mypc;
     while (1) {
+        AWAIT_P_PHI0;  // @posedge
         if (!pipeline->if_id._kill) {
-
-            AWAIT_P_PHI0;  // @posedge
 
             if (pipeline->id_ex._skipExec)
                 continue;
 
             ins = pipeline->if_id.mc._ins;
+            mypc = pipeline->if_id.mc._pc;
 
             // Let it fetch pc+4.
             // If previous one was branch, pc would be updated
@@ -121,7 +124,16 @@ void Decode::MainLoop(void) {
 
             // Now decode
             pipeline->id_ex.mc._ins = ins;
+            pipeline->id_ex.mc._pc = mypc;
             pipeline->id_ex.mc.Dec(ins);
+
+            INLOG((inlog, "%3d |D  |: %15d ==> %s, requires %d, %d, dest is %d\n",
+                    _nfetched, ins,
+                    pipeline->id_ex.mc.insname.c_str(), pipeline->id_ex.mc.src1,
+                    pipeline->id_ex.mc.src2, pipeline->id_ex.mc._decodedDST));
+            pipeline->id_ex.mc.position = _nfetched;
+
+            _nfetched++;
 
             DBG((debugLog, "<%llu> Decoded ins %#x\n", SIM_TIME, ins));
 
@@ -136,7 +148,6 @@ void Decode::MainLoop(void) {
             pipeline->id_ex._kill = FALSE;
 
         } else {
-            AWAIT_P_PHI0;  // @posedge
             AWAIT_P_PHI1;  // @negedge
             pipeline->id_ex._kill = TRUE;
         }

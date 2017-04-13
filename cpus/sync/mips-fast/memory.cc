@@ -12,15 +12,17 @@ void Memory::MainLoop(void) {
     Bool memControl;
 
     while (1) {
+        AWAIT_P_PHI0;  // @posedge
         if (!pipeline->ex_mem._kill) {
-
-            AWAIT_P_PHI0;  // @posedge
 
             // TODO: Verify that this is a deep copy
             EX_MEM mem_pipe = pipeline->ex_mem;
+            cout << "No Insn here mem" << mem_pipe.mc._pc << endl;
 
             memControl = mem_pipe.mc._memControl;
             void (*_memOp)(Mipc *) = mem_pipe.mc._memOp;
+
+            // TODO: BYPASSES, don't forget
 
             AWAIT_P_PHI1;  // @negedge
 
@@ -43,7 +45,6 @@ void Memory::MainLoop(void) {
 
             pipeline->mem_wb._kill = FALSE;
         } else {
-            AWAIT_P_PHI0;  // @posedge
             AWAIT_P_PHI1;  // @negedge
             pipeline->mem_wb._kill = TRUE;
         }

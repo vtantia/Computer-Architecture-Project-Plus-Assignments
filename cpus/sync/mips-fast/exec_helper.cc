@@ -4,12 +4,15 @@
 #include <assert.h>
 #include "app_syscall.h"
 
+#define IDENT(a) insname = a
+
 /*------------------------------------------------------------------------
  *
  *  Instruction exec
  *
  *------------------------------------------------------------------------
  */
+
 void Mipc::Dec(unsigned int ins) {
     MipsInsn i;
     signed int a1, a2;
@@ -39,6 +42,7 @@ void Mipc::Dec(unsigned int ins) {
     switch (i.reg.op) {
         case 0:
             // SPECIAL (ALU format)
+            IDENT("SPECIAL (ALU format)");
             _decodedSRC1 = _gpr[i.reg.rs];
             _decodedSRC2 = _gpr[i.reg.rt];
             _decodedDST = i.reg.rd;
@@ -50,68 +54,85 @@ void Mipc::Dec(unsigned int ins) {
 
             switch (i.reg.func) {
                 case 0x20:  // add
+                    IDENT("add");
                 case 0x21:  // addu
+                    IDENT("addu");
                     _opControl = func_add_addu;
                     break;
 
                 case 0x24:  // and
+                    IDENT("and");
                     _opControl = func_and;
                     break;
 
                 case 0x27:  // nor
+                    IDENT("not");
                     _opControl = func_nor;
                     break;
 
                 case 0x25:  // or
+                    IDENT("or");
                     _opControl = func_or;
                     break;
 
                 case 0:  // sll
+                    IDENT("sll");
                     _opControl = func_sll;
                     _decodedShiftAmt = i.reg.sa;
                     break;
 
                 case 4:  // sllv
+                    IDENT("sllv");
                     _opControl = func_sllv;
                     break;
 
                 case 0x2a:  // slt
+                    IDENT("slt");
                     _opControl = func_slt;
                     break;
 
                 case 0x2b:  // sltu
+                    IDENT("sltu");
                     _opControl = func_sltu;
                     break;
 
                 case 0x3:  // sra
+                    IDENT("sra");
                     _opControl = func_sra;
                     _decodedShiftAmt = i.reg.sa;
                     break;
 
                 case 0x7:  // srav
+                    IDENT("srav");
                     _opControl = func_srav;
                     break;
 
                 case 0x2:  // srl
+                    IDENT("srl");
                     _opControl = func_srl;
                     _decodedShiftAmt = i.reg.sa;
                     break;
 
                 case 0x6:  // srlv
+                    IDENT("srlv");
                     _opControl = func_srlv;
                     break;
 
                 case 0x22:  // sub
+                    IDENT("sub");
                 case 0x23:  // subu
+                    IDENT("subu");
                             // no overflow check
                     _opControl = func_sub_subu;
                     break;
 
                 case 0x26:  // xor
+                    IDENT("xor");
                     _opControl = func_xor;
                     break;
 
                 case 0x1a:  // div
+                    IDENT("div");
                     _opControl = func_div;
                     _hiWPort = TRUE;
                     _loWPort = TRUE;
@@ -120,6 +141,7 @@ void Mipc::Dec(unsigned int ins) {
                     break;
 
                 case 0x1b:  // divu
+                    IDENT("divu");
                     _opControl = func_divu;
                     _hiWPort = TRUE;
                     _loWPort = TRUE;
@@ -128,14 +150,17 @@ void Mipc::Dec(unsigned int ins) {
                     break;
 
                 case 0x10:  // mfhi
+                    IDENT("mfhi");
                     _opControl = func_mfhi;
                     break;
 
                 case 0x12:  // mflo
+                    IDENT("mflo");
                     _opControl = func_mflo;
                     break;
 
                 case 0x11:  // mthi
+                    IDENT("mthi");
                     _opControl = func_mthi;
                     _hiWPort = TRUE;
                     _writeREG = FALSE;
@@ -143,6 +168,7 @@ void Mipc::Dec(unsigned int ins) {
                     break;
 
                 case 0x13:  // mtlo
+                    IDENT("mtlo");
                     _opControl = func_mtlo;
                     _loWPort = TRUE;
                     _writeREG = FALSE;
@@ -150,6 +176,7 @@ void Mipc::Dec(unsigned int ins) {
                     break;
 
                 case 0x18:  // mult
+                    IDENT("mult");
                     _opControl = func_mult;
                     _hiWPort = TRUE;
                     _loWPort = TRUE;
@@ -158,6 +185,7 @@ void Mipc::Dec(unsigned int ins) {
                     break;
 
                 case 0x19:  // multu
+                    IDENT("multu");
                     _opControl = func_multu;
                     _hiWPort = TRUE;
                     _loWPort = TRUE;
@@ -166,12 +194,14 @@ void Mipc::Dec(unsigned int ins) {
                     break;
 
                 case 9:  // jalr
+                    IDENT("jalr");
                     _opControl = func_jalr;
                     _btgt = _decodedSRC1;
                     _bd = 1;
                     break;
 
                 case 8:  // jr
+                    IDENT("jr");
                     _opControl = func_jr;
                     _writeREG = FALSE;
                     _writeFREG = FALSE;
@@ -180,12 +210,14 @@ void Mipc::Dec(unsigned int ins) {
                     break;
 
                 case 0xd:  // await/break
+                    IDENT("await/break");
                     _opControl = func_await_break;
                     _writeREG = FALSE;
                     _writeFREG = FALSE;
                     break;
 
                 case 0xc:  // syscall
+                    IDENT("syscall");
                     _opControl = func_syscall;
                     _writeREG = FALSE;
                     _writeFREG = FALSE;
@@ -201,7 +233,9 @@ void Mipc::Dec(unsigned int ins) {
             break;  // ALU format
 
         case 8:  // addi
+            IDENT("addi");
         case 9:  // addiu
+            IDENT("addiu");
             // ignore overflow: no exceptions
             _opControl = func_addi_addiu;
             _decodedSRC1 = _gpr[i.imm.rs];
@@ -215,6 +249,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0xc:  // andi
+            IDENT("andi");
             _opControl = func_andi;
             _decodedSRC1 = _gpr[i.imm.rs];
             _decodedSRC2 = i.imm.imm;
@@ -227,6 +262,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0xf:  // lui
+            IDENT("lui");
             _opControl = func_lui;
             _decodedSRC2 = i.imm.imm;
             _decodedDST = i.imm.rt;
@@ -238,6 +274,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0xd:  // ori
+            IDENT("ori");
             _opControl = func_ori;
             _decodedSRC1 = _gpr[i.imm.rs];
             _decodedSRC2 = i.imm.imm;
@@ -250,6 +287,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0xa:  // slti
+            IDENT("slti");
             _opControl = func_slti;
             _decodedSRC1 = _gpr[i.imm.rs];
             _decodedSRC2 = i.imm.imm;
@@ -262,6 +300,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0xb:  // sltiu
+            IDENT("sltiu");
             _opControl = func_sltiu;
             _decodedSRC1 = _gpr[i.imm.rs];
             _decodedSRC2 = i.imm.imm;
@@ -274,6 +313,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0xe:  // xori
+            IDENT("xori");
             _opControl = func_xori;
             _decodedSRC1 = _gpr[i.imm.rs];
             _decodedSRC2 = i.imm.imm;
@@ -286,6 +326,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 4:  // beq
+            IDENT("beq");
             _opControl = func_beq;
             _decodedSRC1 = _gpr[i.imm.rs];
             _decodedSRC2 = _gpr[i.imm.rt];
@@ -303,6 +344,7 @@ void Mipc::Dec(unsigned int ins) {
 
         case 1:
             // REGIMM
+            IDENT("REGIMM");
             _decodedSRC1 = _gpr[i.reg.rs];
             _branchOffset = i.imm.imm;
             _writeREG = FALSE;
@@ -313,6 +355,7 @@ void Mipc::Dec(unsigned int ins) {
 
             switch (i.reg.rt) {
                 case 1:  // bgez
+                    IDENT("bgez");
                     _opControl = func_bgez;
                     _branchOffset <<= 16;
                     _branchOffset >>= 14;
@@ -321,6 +364,7 @@ void Mipc::Dec(unsigned int ins) {
                     break;
 
                 case 0x11:  // bgezal
+                    IDENT("bgezal");
                     _opControl = func_bgezal;
                     _decodedDST = 31;
                     _writeREG = TRUE;
@@ -331,6 +375,7 @@ void Mipc::Dec(unsigned int ins) {
                     break;
 
                 case 0x10:  // bltzal
+                    IDENT("bltzal");
                     _opControl = func_bltzal;
                     _decodedDST = 31;
                     _writeREG = TRUE;
@@ -341,6 +386,7 @@ void Mipc::Dec(unsigned int ins) {
                     break;
 
                 case 0x0:  // bltz
+                    IDENT("bltz");
                     _opControl = func_bltz;
                     _branchOffset <<= 16;
                     _branchOffset >>= 14;
@@ -355,6 +401,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 7:  // bgtz
+            IDENT("bgtz");
             _opControl = func_bgtz;
             _decodedSRC1 = _gpr[i.reg.rs];
             _branchOffset = i.imm.imm;
@@ -370,6 +417,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 6:  // blez
+            IDENT("blez");
             _opControl = func_blez;
             _decodedSRC1 = _gpr[i.reg.rs];
             _branchOffset = i.imm.imm;
@@ -385,6 +433,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 5:  // bne
+            IDENT("bne");
             _opControl = func_bne;
             _decodedSRC1 = _gpr[i.reg.rs];
             _decodedSRC2 = _gpr[i.reg.rt];
@@ -401,6 +450,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 2:  // j
+            IDENT("j");
             _opControl = func_j;
             _branchOffset = i.tgt.tgt;
             _writeREG = FALSE;
@@ -413,6 +463,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 3:  // jal
+            IDENT("jal");
             _opControl = func_jal;
             _branchOffset = i.tgt.tgt;
             _decodedDST = 31;
@@ -426,6 +477,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0x20:  // lb
+            IDENT("lb");
             _opControl = func_lb;
             _memOp = mem_lb;
             _decodedSRC1 = _gpr[i.reg.rs];
@@ -439,6 +491,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0x24:  // lbu
+            IDENT("lbu");
             _opControl = func_lbu;
             _memOp = mem_lbu;
             _decodedSRC1 = _gpr[i.reg.rs];
@@ -452,6 +505,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0x21:  // lh
+            IDENT("lh");
             _opControl = func_lh;
             _memOp = mem_lh;
             _decodedSRC1 = _gpr[i.reg.rs];
@@ -465,6 +519,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0x25:  // lhu
+            IDENT("lhu");
             _opControl = func_lhu;
             _memOp = mem_lhu;
             _decodedSRC1 = _gpr[i.reg.rs];
@@ -478,6 +533,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0x22:  // lwl
+            IDENT("lwl");
             _opControl = func_lwl;
             _memOp = mem_lwl;
             _decodedSRC1 = _gpr[i.reg.rs];
@@ -492,6 +548,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0x23:  // lw
+            IDENT("lw");
             _opControl = func_lw;
             _memOp = mem_lw;
             _decodedSRC1 = _gpr[i.reg.rs];
@@ -505,6 +562,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0x26:  // lwr
+            IDENT("lwr");
             _opControl = func_lwr;
             _memOp = mem_lwr;
             _decodedSRC1 = _gpr[i.reg.rs];
@@ -519,6 +577,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0x31:  // lwc1
+            IDENT("lwc1");
             _opControl = func_lwc1;
             _memOp = mem_lwc1;
             _decodedSRC1 = _gpr[i.reg.rs];
@@ -532,6 +591,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0x39:  // swc1
+            IDENT("swc1");
             _opControl = func_swc1;
             _memOp = mem_swc1;
             _decodedSRC1 = _gpr[i.reg.rs];
@@ -545,6 +605,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0x28:  // sb
+            IDENT("sb");
             _opControl = func_sb;
             _memOp = mem_sb;
             _decodedSRC1 = _gpr[i.reg.rs];
@@ -558,6 +619,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0x29:  // sh  store half word
+            IDENT("sh  store half word");
             _opControl = func_sh;
             _memOp = mem_sh;
             _decodedSRC1 = _gpr[i.reg.rs];
@@ -571,6 +633,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0x2a:  // swl
+            IDENT("swl");
             _opControl = func_swl;
             _memOp = mem_swl;
             _decodedSRC1 = _gpr[i.reg.rs];
@@ -584,6 +647,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0x2b:  // sw
+            IDENT("sw");
             _opControl = func_sw;
             _memOp = mem_sw;
             _decodedSRC1 = _gpr[i.reg.rs];
@@ -597,6 +661,7 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0x2e:  // swr
+            IDENT("swr");
             _opControl = func_swr;
             _memOp = mem_swr;
             _decodedSRC1 = _gpr[i.reg.rs];
@@ -610,9 +675,11 @@ void Mipc::Dec(unsigned int ins) {
             break;
 
         case 0x11:  // floating-point
+            IDENT("floating-point");
             _fpinst++;
             switch (i.freg.fmt) {
                 case 4:  // mtc1
+                    IDENT("mtc1");
                     _opControl = func_mtc1;
                     _decodedSRC1 = _gpr[i.freg.ft];
                     _decodedDST = i.freg.fs;
@@ -624,6 +691,7 @@ void Mipc::Dec(unsigned int ins) {
                     break;
 
                 case 0:  // mfc1
+                    IDENT("mfc1");
                     _opControl = func_mfc1;
                     _decodedSRC1 =
                         _fpr[(i.freg.fs) >> 1].l[FP_TWIDDLE ^ ((i.freg.fs) & 1)];

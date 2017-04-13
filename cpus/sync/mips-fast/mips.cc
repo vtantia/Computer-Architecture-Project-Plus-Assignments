@@ -2,8 +2,10 @@
 #include "common.h"
 #include <assert.h>
 #include "mips-irix5.h"
+#include "opcodes.h"
 
 Mipc::Mipc() {
+    insname = "";
 }
 
 // Mipc::Mipc(Mipc *main_mc) {
@@ -16,12 +18,18 @@ Mipc::Mipc(Mem *m) : _l('M') {
     _sys = new MipcSysCall(this);  // Allocate syscall layer
 
     _gpr = (unsigned int*)malloc(32 * sizeof(unsigned int));
+    _gpr[0] = 0;
+
+    insname = "undefined";
+    src1 = -1; src2 = -1; subreg = -1;
 
     Reboot(ParamGetString("Mipc.BootROM"));
 }
 
 Mipc::~Mipc(void) {
 }
+
+bool bbb = false;
 
 void Mipc::MainLoop(void) {
     LL addr;
@@ -32,19 +40,18 @@ void Mipc::MainLoop(void) {
     _nfetched = 0;
 
     while (!_sim_exit) {
+        AWAIT_P_PHI0;  // @posedge
+        INLOG((inlog, "=========== CYCLE %d ==========\n", cycleId));
+        cycleId++;
         if (!pipeline->if_id._fetch_kill) {
 
-            AWAIT_P_PHI0;  // @posedge
             AWAIT_P_PHI1;  // @negedge
 
-            DBG((debugLog, "<%llu> Fetched ins %#x from PC %#x\n", SIM_TIME, ins, _pc));
 
             addr = _pc;
             ins = _mem->BEGetWord(addr, _mem->Read(addr & ~(LL)0x7));
             _ins = ins;
-
-            cout << "Instruction is " << ins << " at nfetch " << _nfetched <<
-                " at PC " << _pc << endl;
+            DBG((debugLog, "<%llu> Fetched ins %#x from PC %#x\n", SIM_TIME, ins, _pc));
 
             pipeline->if_id.mc._ins = ins;
             pipeline->if_id.mc._pc = addr;
@@ -54,8 +61,13 @@ void Mipc::MainLoop(void) {
 
             pipeline->if_id._kill = FALSE;
 
+            bbb = true;
+
+            // if (bbb) {
+                // pipeline->if_id._fetch_kill = true;
+            // }
+
         } else {
-            AWAIT_P_PHI0;  // @posedge
             AWAIT_P_PHI1;  // @negedge
             pipeline->if_id._kill = TRUE;
         }
