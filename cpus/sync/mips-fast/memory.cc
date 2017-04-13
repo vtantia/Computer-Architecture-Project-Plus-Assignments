@@ -3,9 +3,6 @@
 
 Memory::Memory(Mipc *mc) {
     _mc = mc;
-    memset(&pipeline->mem_wb, 0, sizeof(pipeline->mem_wb));
-
-    pipeline->mem_wb._kill = TRUE;
 }
 
 Memory::~Memory(void) {
@@ -27,7 +24,7 @@ void Memory::MainLoop(void) {
 
             AWAIT_P_PHI1;  // @negedge
 
-            DBG((stdout, "_memOp is %x\n", _mc->_memOp));
+            DBG((debugLog, "_memOp is %x\n", mem_pipe.mc._memOp));
 
             if (memControl) {
                 mem_pipe.mc._memOp(&(mem_pipe.mc));

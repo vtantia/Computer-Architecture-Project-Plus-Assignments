@@ -3,8 +3,6 @@
 
 Exe::Exe(Mipc *mc) {
     _mc = mc;
-    memset(&pipeline->ex_mem, 0, sizeof(pipeline->ex_mem));
-    pipeline->ex_mem._kill = TRUE;
 }
 
 Exe::~Exe(void) {

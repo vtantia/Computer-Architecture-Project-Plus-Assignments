@@ -104,7 +104,10 @@ public:
     Mipc mc;
 
     IF_ID(Mipc *mh) {
-        mc = *(new Mipc(mh));
+        _kill = true;
+        _fetch_kill = false;
+        _was_branch = false;
+        mc = *mh;
     }
 };
 
@@ -117,7 +120,12 @@ public:
     int src1, src2, subreg;
 
     ID_EX(Mipc *mh) {
-        mc = *(new Mipc(mh));
+        mc = *mh;
+        _kill = true;
+        _skipExec = false;
+        src1 = -1;
+        src2 = -1;
+        subreg = -1;
     }
 };
 
@@ -127,7 +135,8 @@ public:
     Bypass bypass;
     Mipc mc;
     EX_MEM(Mipc *mh) {
-        mc = *(new Mipc(mh));
+        mc = *mh;
+        _kill = true;
     }
 };
 
@@ -137,7 +146,8 @@ public:
     Bypass bypass;
     Mipc mc;
     MEM_WB(Mipc *mh) {
-        mc = *(new Mipc(mh));
+        mc = *mh;
+        _kill = true;
     }
 };
 

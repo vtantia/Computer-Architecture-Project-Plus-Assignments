@@ -6,16 +6,14 @@
 Mipc::Mipc() {
 }
 
-Mipc::Mipc(Mipc *main_mc) {
-    _gpr = main_mc->_gpr;
-    _mem = main_mc->_mem;
-}
+// Mipc::Mipc(Mipc *main_mc) {
+//     _gpr = main_mc->_gpr;
+//     _mem = main_mc->_mem;
+// }
 
 Mipc::Mipc(Mem *m) : _l('M') {
     _mem = m;
     _sys = new MipcSysCall(this);  // Allocate syscall layer
-    memset(&pipeline->if_id, 0, sizeof(pipeline->if_id));
-    pipeline->if_id._kill = TRUE;
 
     _gpr = (unsigned int*)malloc(32 * sizeof(unsigned int));
 
@@ -45,7 +43,7 @@ void Mipc::MainLoop(void) {
             ins = _mem->BEGetWord(addr, _mem->Read(addr & ~(LL)0x7));
             _ins = ins;
 
-            cerr << "Instruction is " << ins << " at nfetch " << _nfetched <<
+            cout << "Instruction is " << ins << " at nfetch " << _nfetched <<
                 " at PC " << _pc << endl;
 
             pipeline->if_id.mc._ins = ins;

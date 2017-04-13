@@ -26,15 +26,6 @@ void Writeback::MainLoop(void) {
             AWAIT_P_PHI0;  // @posedge
 
             Mipc local_mc = pipeline->mem_wb.mc;
-            // writeReg = pipeline->mem_wb._writeREG;
-            // writeFReg = pipeline->mem_wb._writeFREG;
-            // loWPort = pipeline->mem_wb._loWPort;
-            // hiWPort = pipeline->mem_wb._hiWPort;
-            // decodedDST = pipeline->mem_wb._decodedDST;
-            // opResultLo = pipeline->mem_wb._opResultLo;
-            // opResultHi = pipeline->mem_wb._opResultHi;
-            // isSyscall = pipeline->mem_wb._isSyscall;
-            // isIllegalOp = pipeline->mem_wb._isIllegalOp;
 
             ins = local_mc._ins;
 

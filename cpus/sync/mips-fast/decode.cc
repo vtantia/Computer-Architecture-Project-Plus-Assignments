@@ -6,8 +6,6 @@
 
 Decode::Decode(Mipc *mc) {
     _mc = mc;
-    memset(&pipeline->id_ex, 0, sizeof(pipeline->id_ex));
-    pipeline->id_ex._kill = TRUE;
 }
 
 Decode::~Decode(void) {
@@ -117,7 +115,7 @@ void Decode::MainLoop(void) {
                 // HAZARD !!!
                 pipeline->id_ex._skipExec = true;
 
-                cerr << "Encountered a HAZARD" << endl;
+                cout << "Encountered a HAZARD" << endl;
             }
             // Hazard is checked
 

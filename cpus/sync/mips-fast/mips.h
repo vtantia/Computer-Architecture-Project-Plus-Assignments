@@ -30,7 +30,7 @@ typedef unsigned Bool;
 class Mipc : public SimObject {
 public:
     Mipc ();
-    Mipc (Mipc *);
+    /* Mipc (Mipc *); */
     Mipc (Mem *m);
     ~Mipc ();
 
