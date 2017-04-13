@@ -3,11 +3,21 @@
 #include <assert.h>
 #include "mips-irix5.h"
 
+Mipc::Mipc() {
+}
+
+Mipc::Mipc(Mipc *main_mc) {
+    _gpr = main_mc->_gpr;
+    _mem = main_mc->_mem;
+}
+
 Mipc::Mipc(Mem *m) : _l('M') {
     _mem = m;
     _sys = new MipcSysCall(this);  // Allocate syscall layer
     memset(&pipeline->if_id, 0, sizeof(pipeline->if_id));
     pipeline->if_id._kill = TRUE;
+
+    _gpr = (unsigned int*)malloc(32 * sizeof(unsigned int));
 
     Reboot(ParamGetString("Mipc.BootROM"));
 }
@@ -26,28 +36,21 @@ void Mipc::MainLoop(void) {
     while (!_sim_exit) {
         if (!pipeline->if_id._fetch_kill) {
 
-            DDBG;
             AWAIT_P_PHI0;  // @posedge
-            DDBG;
-
-            DDBG;
             AWAIT_P_PHI1;  // @negedge
-            DDBG;
 
-#ifdef MIPC_DEBUG
-            fprintf(debugLog, "<%llu> Fetched ins %#x from PC %#x\n", SIM_TIME, ins, _pc);
-#endif
+            DBG((debugLog, "<%llu> Fetched ins %#x from PC %#x\n", SIM_TIME, ins, _pc));
+
             addr = _pc;
             ins = _mem->BEGetWord(addr, _mem->Read(addr & ~(LL)0x7));
             _ins = ins;
 
-            cout << "Instruction is " << ins << " at nfetch " << _nfetched <<
+            cerr << "Instruction is " << ins << " at nfetch " << _nfetched <<
                 " at PC " << _pc << endl;
-            fflush(stdout);
 
-            pipeline->if_id._ins = ins;
-            //_insValid = TRUE;
-            //_insDone = FALSE;
+            pipeline->if_id.mc._ins = ins;
+            pipeline->if_id.mc._pc = addr;
+
             _nfetched++;
             _bd = 0;
 
@@ -57,7 +60,6 @@ void Mipc::MainLoop(void) {
             AWAIT_P_PHI0;  // @posedge
             AWAIT_P_PHI1;  // @negedge
             pipeline->if_id._kill = TRUE;
-            // PAUSE(1);
         }
     }
 
@@ -127,11 +129,11 @@ void Mipc::Reboot(char *image) {
 
         // Reset state
         _ins = 0;
-        _insValid = FALSE;
-        _decodeValid = FALSE;
-        _execValid = FALSE;
-        _memValid = FALSE;
-        _insDone = TRUE;
+        // _insValid = FALSE;
+        // _decodeValid = FALSE;
+        // _execValid = FALSE;
+        // _memValid = FALSE;
+        // _insDone = TRUE;
 
         _num_load = 0;
         _num_store = 0;
@@ -140,7 +142,6 @@ void Mipc::Reboot(char *image) {
         _num_jal = 0;
         _num_jr = 0;
 
-        _lastbd = 0;
         _bd = 0;
         _btaken = 0;
         _btgt = 0xdeadbeef;

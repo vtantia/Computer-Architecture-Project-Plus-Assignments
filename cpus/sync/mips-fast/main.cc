@@ -48,7 +48,6 @@ int main(int argc, char **argv) {
     Exe *exec;
     Memory *mem;
     Mem *m;
-    pipeline = new Pipereg;
     Writeback *wb;
     char buf[SIZE];
     char *fname, *cname;
@@ -120,6 +119,8 @@ int main(int argc, char **argv) {
     m = new Mem();
 
     mh = new Mipc(m);
+    pipeline = new Pipereg(mh);
+
     dec = new Decode(mh);
     exec = new Exe(mh);
     mem = new Memory(mh);

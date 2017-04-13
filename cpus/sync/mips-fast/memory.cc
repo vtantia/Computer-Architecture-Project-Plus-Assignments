@@ -11,49 +11,44 @@ Memory::Memory(Mipc *mc) {
 Memory::~Memory(void) {
 }
 
-EX_MEM mem_pipe;
-
 void Memory::MainLoop(void) {
     Bool memControl;
 
     while (1) {
         if (!pipeline->ex_mem._kill) {
-            DDBG;
+
             AWAIT_P_PHI0;  // @posedge
-            DDBG;
-            mem_pipe = pipeline->ex_mem;
-            memControl = mem_pipe._memControl;
-            void (*_memOp)(Mipc *) = mem_pipe._memOp;
 
-            DDBG;
+            // TODO: Verify that this is a deep copy
+            EX_MEM mem_pipe = pipeline->ex_mem;
+
+            memControl = mem_pipe.mc._memControl;
+            void (*_memOp)(Mipc *) = mem_pipe.mc._memOp;
+
             AWAIT_P_PHI1;  // @negedge
-            DDBG;
-#ifdef MIPC_DEBUG
-            fprintf(stdout, "_memOp is %x\n", _mc->_memOp);
-#endif
-            if (memControl) {
-                mem_pipe._memOp(_mc);
-#ifdef MIPC_DEBUG
-                fprintf(debugLog, "<%llu> Accessing memory at address %#x for ins %#x\n",
-                        SIM_TIME, mem_pipe._MAR, mem_pipe._ins);
-#endif
-            } else {
-#ifdef MIPC_DEBUG
-                fprintf(debugLog, "<%llu> Memory has nothing to do for ins %#x\n",
-                        SIM_TIME, mem_pipe._ins);
-#endif
-            }
-            //_mc->_execValid = FALSE;
-            //_mc->_memValid = TRUE;
 
-            pipeline->mem_wb.copyFromPipe(&mem_pipe);
+            DBG((stdout, "_memOp is %x\n", _mc->_memOp));
+
+            if (memControl) {
+                mem_pipe.mc._memOp(&(mem_pipe.mc));
+
+                DBG((debugLog, "<%llu> Access memory at addr %#x for ins %#x\n",
+                     SIM_TIME, mem_pipe.mc._MAR, mem_pipe.mc._ins));
+            } else {
+                DBG((debugLog, "<%llu> Memory has nothing to do for ins %#x\n",
+                     SIM_TIME, mem_pipe.mc._ins));
+            }
+
+            // IMP TODO: We need to send all info from mem_pipe to next
+            // stage ki pipe. See if this works
+            pipeline->mem_wb.mc = mem_pipe.mc;
+            // pipeline->mem_wb.copyFromPipe(&mem_pipe);
 
             pipeline->mem_wb._kill = FALSE;
         } else {
             AWAIT_P_PHI0;  // @posedge
             AWAIT_P_PHI1;  // @negedge
             pipeline->mem_wb._kill = TRUE;
-            // PAUSE(1);
         }
     }
 }

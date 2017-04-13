@@ -43,46 +43,57 @@ public:
         }
         return false;
     }
+
+    bool canIGetNewValueOfRegUnsigned(int reg, unsigned int *val) {
+        if (storedReg1 == reg && valid1) {
+            *val = storedVal1;
+            return true;
+        }
+        if (storedReg2 == reg && valid2) {
+            *val = storedVal2;
+            return true;
+        }
+        return false;
+    }
 };
 
-class Common {
-public:
-    /* processor state */
-    unsigned int _ins;  // instruction register
+/* class Common { */
+/* public: */
+/*     /\* processor state *\/ */
+/*     unsigned int _ins;  // instruction register */
 
-    int _rs, _rt;
+/*     int _rs, _rt; */
 
-    signed int _decodedSRC1, _decodedSRC2;  // Reg fetch output (source values)
-    unsigned _decodedDST;                   // Decoder output (dest reg no)
-    unsigned _subregOperand;                // Needed for lwl and lwr
-    unsigned _MAR;                          // Memory address register
-    unsigned _opResultHi, _opResultLo;      // Result of operation
-    Bool _memControl;                       // Memory instruction?
-    Bool _writeREG, _writeFREG;             // WB control
-    signed int _branchOffset;
-    Bool _hiWPort, _loWPort;    // WB control
-    unsigned _decodedShiftAmt;  // Shift amount
+/*     signed int _decodedSRC1, _decodedSRC2;  // Reg fetch output (source values) */
+/*     unsigned _decodedDST;                   // Decoder output (dest reg no) */
+/*     unsigned _subregOperand;                // Needed for lwl and lwr */
+/*     unsigned _MAR;                          // Memory address register */
+/*     unsigned _opResultHi, _opResultLo;      // Result of operation */
+/*     Bool _memControl;                       // Memory instruction? */
+/*     Bool _writeREG, _writeFREG;             // WB control */
+/*     signed int _branchOffset; */
+/*     Bool _hiWPort, _loWPort;    // WB control */
+/*     unsigned _decodedShiftAmt;  // Shift amount */
 
-    unsigned int _hi, _lo;  // mult, div destination
-    unsigned int _pc;       // Program counter
-    unsigned int _lastbd;   // branch delay state
-    unsigned int _boot;     // boot code loaded?
+/*     unsigned int _hi, _lo;  // mult, div destination */
+/*     unsigned int _pc;       // Program counter */
+/*     unsigned int _boot;     // boot code loaded? */
 
-    int _btaken;         // taken branch (1 if taken, 0 if fall-through)
-    int _bd;             // 1 if the next ins is delay slot
-    unsigned int _btgt;  // branch target
+/*     int _btaken;         // taken branch (1 if taken, 0 if fall-through) */
+/*     int _bd;             // 1 if the next ins is delay slot */
+/*     unsigned int _btgt;  // branch target */
 
-    Bool _isSyscall;    // 1 if system call
-    Bool _isIllegalOp;  // 1 if illegal opcode
+/*     Bool _isSyscall;    // 1 if system call */
+/*     Bool _isIllegalOp;  // 1 if illegal opcode */
 
-    Bool _kill;         // Kill signal for pipeline stage
+/*     Bool _kill;         // Kill signal for pipeline stage */
 
-    void (*_opControl)(Mipc *, unsigned);
-    void (*_memOp)(Mipc *);
+/*     void (*_opControl)(Mipc *, unsigned); */
+/*     void (*_memOp)(Mipc *); */
 
-    void copyFromMc(Mipc *);
-    void copyFromPipe(Common *);
-};
+/*     void copyFromMc(Mipc *); */
+/*     void copyFromPipe(Common *); */
+/* }; */
 
 class IF_ID {
 public:
@@ -90,26 +101,49 @@ public:
     Bool _kill;         // Kill signal for pipeline stage
     Bool _fetch_kill;   // Kill signal for pipeline stage
     int _was_branch;
+    Mipc mc;
+
+    IF_ID(Mipc *mh) {
+        mc = *(new Mipc(mh));
+    }
 };
 
-class ID_EX : public Common {
+class ID_EX {
 public:
+    Bool _kill;         // Kill signal for pipeline stage
     bool _skipExec;     // Have to skip the next EXEC phase
+    Mipc mc;
+
+    int src1, src2, subreg;
+
+    ID_EX(Mipc *mh) {
+        mc = *(new Mipc(mh));
+    }
 };
 
-class EX_MEM : public Common {
+class EX_MEM {
 public:
+    Bool _kill;         // Kill signal for pipeline stage
     Bypass bypass;
+    Mipc mc;
+    EX_MEM(Mipc *mh) {
+        mc = *(new Mipc(mh));
+    }
 };
 
-class MEM_WB : public Common {
+class MEM_WB {
 public:
+    Bool _kill;         // Kill signal for pipeline stage
     Bypass bypass;
+    Mipc mc;
+    MEM_WB(Mipc *mh) {
+        mc = *(new Mipc(mh));
+    }
 };
 
 class Pipereg {
 public:
-    Pipereg(){};
+    Pipereg(Mipc *mh) : if_id(mh), id_ex(mh), ex_mem(mh), mem_wb(mh) {};
     ~Pipereg(){};
 
     // Instruction Fetch / Decode Pipeline register
@@ -125,6 +159,7 @@ public:
     MEM_WB mem_wb;
 
     void getBypassValue(int kaunsaReg, int *kidharStore);
+    void getBypassValueUnsigned(int kaunsaReg, unsigned int *kidharStore);
 };
 
 #endif
