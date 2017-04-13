@@ -91,7 +91,7 @@ void Decode::MainLoop(void) {
     int _nfetched = 0, mypc;
     while (1) {
         AWAIT_P_PHI0;  // @posedge
-        if (!pipeline->if_id._kill) {
+        if (!pipeline->if_id._kill && !pipeline->runningSyscall) {
 
             if (pipeline->id_ex._skipExec)
                 continue;
@@ -118,7 +118,7 @@ void Decode::MainLoop(void) {
                 // HAZARD !!!
                 pipeline->id_ex._skipExec = true;
 
-                cout << "Encountered a HAZARD" << endl;
+                INLOG((inlog, "************HAZARD***********\n"));
             }
             // Hazard is checked
 
@@ -127,10 +127,11 @@ void Decode::MainLoop(void) {
             pipeline->id_ex.mc._pc = mypc;
             pipeline->id_ex.mc.Dec(ins);
 
-            INLOG((inlog, "%3d |D  |: %15d ==> %s, requires %d, %d, dest is %d\n",
-                    _nfetched, ins,
-                    pipeline->id_ex.mc.insname.c_str(), pipeline->id_ex.mc.src1,
-                    pipeline->id_ex.mc.src2, pipeline->id_ex.mc._decodedDST));
+            INLOG((inlog, "%3d |D  |: %13u ==> %s, requires %d, %d, dest is %d. Fetched from %#x\n",
+                   _nfetched, ins,
+                   pipeline->id_ex.mc.insname.c_str(), pipeline->id_ex.mc.src1,
+                   pipeline->id_ex.mc.src2, pipeline->id_ex.mc._decodedDST,
+                   mypc));
             pipeline->id_ex.mc.position = _nfetched;
 
             _nfetched++;
@@ -141,8 +142,7 @@ void Decode::MainLoop(void) {
             pipeline->if_id._was_branch = pipeline->id_ex.mc._bd;
 
             if (pipeline->id_ex.mc._isSyscall) {
-                pipeline->if_id._fetch_kill = TRUE;
-                pipeline->if_id._kill = TRUE;
+                pipeline->runningSyscall = TRUE;
             }
 
             pipeline->id_ex._kill = FALSE;

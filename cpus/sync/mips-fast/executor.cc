@@ -1,6 +1,7 @@
 #include "executor.h"
 #include "opcodes.h"
 #include "common.h"
+#include <assert.h>
 
 Exe::Exe(Mipc *mc) {
     _mc = mc;
@@ -35,22 +36,35 @@ void Exe::MainLoop(void) {
 
             if (!isSyscall && !isIllegalOp) {
                 // TODO: Think about _lo, _hi
-                // TODO: This place is doomed.
 
-                // Fetch latest value of SRC1
-                pipeline->getBypassValue(
-                    ex_pipe.mc.src1,
-                    &(ex_pipe.mc._decodedSRC1));
+                // It could've generated _opResultLo any time, we
+                // don't care. Thus, no check for memControl.
+                if (pipeline->mem_wb.mc._writeREG) {
+                    getBypassValue(&(ex_pipe.mc), &(pipeline->mem_wb.mc));
+                }
 
-                // Fetch latest value of SRC2
-                pipeline->getBypassValue(
-                    ex_pipe.mc.src2,
-                    &(ex_pipe.mc._decodedSRC2));
+                // Previous instruction is still running MEM. We want
+                // to know if it generated a value in EX, thus !memControl.
+                if (!pipeline->ex_mem.mc._memControl &&
+                    pipeline->ex_mem.mc._writeREG) {
+                    getBypassValue(&(ex_pipe.mc), &(pipeline->ex_mem.mc));
+                }
 
-                // Fetch latest value of SUBREG
-                pipeline->getBypassValueUnsigned(
-                    ex_pipe.mc.subreg,
-                    &(ex_pipe.mc._subregOperand));
+                // Bypass for lo and hi
+                if (pipeline->ex_mem.mc._loWPort) {
+                    ex_pipe.mc._lo = pipeline->ex_mem.mc._opResultLo;
+                }
+                if (pipeline->ex_mem.mc._hiWPort) {
+                    ex_pipe.mc._hi = pipeline->ex_mem.mc._opResultHi;
+                }
+
+                MipsInsn i; i.data = ins;
+                if (i.reg.op == 0 && (i.reg.func == 9 || i.reg.func == 8)) {
+                    // This is jalr / jr. They use decodedSRC1 as
+                    // their branch target, which wasn't updated by
+                    // the bypass checks
+                    ex_pipe.mc._btgt = ex_pipe.mc._decodedSRC1;
+                }
 
                 // Run executor
                 // ex_pipe.mc returns which function to be run for
@@ -80,40 +94,25 @@ void Exe::MainLoop(void) {
             pipeline->ex_mem._kill = FALSE;
             AWAIT_P_PHI1;  // @negedge
 
-            // Update value of bypasses if this // generated a result
-            if (!ex_pipe.mc._memControl && ex_pipe.mc._writeREG) {
-                // TODO: Also store _lo, _hi, _opResultHi
-                pipeline->ex_mem.bypass.storeValueFromEx(
-                    ex_pipe.mc._opResultLo, ex_pipe.mc._decodedDST);
-            } else {
-                pipeline->ex_mem.bypass.invalidateEx();
-            }
-
             MipsInsn i; i.data = ins;
             INLOG((inlog,
-                   "%3d |EX |: %s takes: %d, %d and %d (imm) to write %d into %d\n",
+                   "%3d |EX |: %s took: %d, %d and %d (imm) to write %#x into %d. PC now is %#x\n",
                    ex_pipe.mc.position, ex_pipe.mc.insname.c_str(),
                    ex_pipe.mc.src1 == -1 ? -1 : ex_pipe.mc._decodedSRC1,
                    ex_pipe.mc.src2 == -1 ? -1 : ex_pipe.mc._decodedSRC2,
                    i.imm.imm,
-                   (!ex_pipe.mc._memControl && ex_pipe.mc._writeREG) ?
-                   ex_pipe.mc._opResultLo : (unsigned int)(-1),
-                   ex_pipe.mc._decodedDST));
+                   ex_pipe.mc._writeREG ? ex_pipe.mc._opResultLo : (unsigned int)(-723923),
+                   ex_pipe.mc._decodedDST, _mc->_pc));
 
-
-            // IMP TODO: We need to send all info from ex_pipe to next
-            // stage ki pipe. See if this works
             pipeline->ex_mem.mc = ex_pipe.mc;
 
-            // pipeline->ex_mem.copyFromPipe(&ex_pipe);
-            // pipeline->ex_mem._MAR = _mc->_MAR;
-            // pipeline->ex_mem._opResultLo = _mc->_opResultLo;
-            // pipeline->ex_mem._opResultHi = _mc->_opResultHi;
-            // pipeline->ex_mem._btaken = _mc->_btaken;
-            cout << "No Insn here ex" << ex_pipe.mc._pc << endl;
         } else {
             AWAIT_P_PHI1;  // @negedge
             pipeline->ex_mem._kill = TRUE;
+
+            // If pipeline is stalled, next instruction should not
+            // look for bypass values here
+            pipeline->ex_mem.mc._writeREG = false;
         }
     }
 }

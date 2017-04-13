@@ -1,5 +1,20 @@
 #include "common.h"
 
+void getBypassValue(Mipc *local_pipe, Mipc *whereToRead) {
+    if (local_pipe->src1 == whereToRead->_decodedDST) {
+        INLOG((inlog, "%3d |BYX|: Requested reg %d, got value %d\n",
+               local_pipe->position, local_pipe->src1,
+               whereToRead->_opResultLo));
+        local_pipe->_decodedSRC1 = whereToRead->_opResultLo;
+    }
+    if (local_pipe->src2 == whereToRead->_decodedDST) {
+        INLOG((inlog, "%3d |BYX|: Requested reg %d, got value %d\n",
+               local_pipe->position, local_pipe->src2,
+               whereToRead->_opResultLo));
+        local_pipe->_decodedSRC2 = whereToRead->_opResultLo;
+    }
+}
+
 Bypass::Bypass() {
     valid1 = false;
     valid2 = false;

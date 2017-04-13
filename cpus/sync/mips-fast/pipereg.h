@@ -6,6 +6,8 @@
 #define INLOG(a) {fprintf a ; fflush(inlog); }
 extern FILE *inlog;
 
+void getBypassValue(Mipc *local_pipe, Mipc *whereToRead);
+
 class Bypass {
 public:
     int storedReg1, storedReg2;
@@ -165,7 +167,9 @@ public:
 
 class Pipereg {
 public:
-    Pipereg(Mipc *mh) : if_id(mh), id_ex(mh), ex_mem(mh), mem_wb(mh) {};
+    Pipereg(Mipc *mh) : if_id(mh), id_ex(mh), ex_mem(mh), mem_wb(mh) {
+        runningSyscall = false;
+    };
     ~Pipereg(){};
 
     // Instruction Fetch / Decode Pipeline register
@@ -179,6 +183,8 @@ public:
 
     // Memory phase / Write back Pipeline register
     MEM_WB mem_wb;
+
+    bool runningSyscall;
 
     void getBypassValue(int kaunsaReg, int *kidharStore);
     void getBypassValueUnsigned(int kaunsaReg, unsigned int *kidharStore);

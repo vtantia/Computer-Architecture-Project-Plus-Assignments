@@ -29,8 +29,6 @@ Mipc::Mipc(Mem *m) : _l('M') {
 Mipc::~Mipc(void) {
 }
 
-bool bbb = false;
-
 void Mipc::MainLoop(void) {
     LL addr;
     unsigned int ins;  // Local instruction register
@@ -43,10 +41,9 @@ void Mipc::MainLoop(void) {
         AWAIT_P_PHI0;  // @posedge
         INLOG((inlog, "=========== CYCLE %d ==========\n", cycleId));
         cycleId++;
-        if (!pipeline->if_id._fetch_kill) {
+        if (!pipeline->if_id._fetch_kill && !pipeline->runningSyscall) {
 
             AWAIT_P_PHI1;  // @negedge
-
 
             addr = _pc;
             ins = _mem->BEGetWord(addr, _mem->Read(addr & ~(LL)0x7));
@@ -60,12 +57,6 @@ void Mipc::MainLoop(void) {
             _bd = 0;
 
             pipeline->if_id._kill = FALSE;
-
-            bbb = true;
-
-            // if (bbb) {
-                // pipeline->if_id._fetch_kill = true;
-            // }
 
         } else {
             AWAIT_P_PHI1;  // @negedge

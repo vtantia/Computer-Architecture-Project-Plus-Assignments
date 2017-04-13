@@ -1,0 +1,298 @@
+<0> Fetched ins 0x3c1d7fff from PC 0x1fc00000
+<1> Decoded ins 0x3c1d7fff
+<1> Fetched ins 0x37bdae50 from PC 0x1fc00004
+<2> Executed ins 0x3c1d7fff
+<2> Decoded ins 0x37bdae50
+<2> Fetched ins 0x2402049d from PC 0x1fc00008
+<3> Executed ins 0x37bdae50
+<3> Decoded ins 0x2402049d
+<3> Fetched ins 0x24040000 from PC 0x1fc0000c
+_memOp is 98fd7b0
+<3> Memory has nothing to do for ins 0x3c1d7fff
+<4> Executed ins 0x2402049d
+<4> Writing to reg 29, value: 0x7fff0000
+_memOp is 98fd7b0
+<4> Memory has nothing to do for ins 0x37bdae50
+<4> Decoded ins 0x24040000
+<4> Fetched ins 0xc from PC 0x1fc00010
+<5> Writing to reg 29, value: 0x7fffae50
+<5> Executed ins 0x24040000
+<5> Fetched ins 0x24040000 from PC 0x1fc00014
+_memOp is 98fd7b0
+<5> Memory has nothing to do for ins 0x2402049d
+<5> Decoded ins 0xc
+<6> Writing to reg 2, value: 0x49d
+<6> Deferring execution of syscall ins 0xc
+_memOp is 98fd7b0
+<6> Memory has nothing to do for ins 0x24040000
+<7> Writing to reg 4, value: 0
+_memOp is 98fd7b0
+<7> Memory has nothing to do for ins 0xc
+<8> SYSCALL! Trapping to emulation layer at PC 0x1fc00014
+<9> Fetched ins 0x24040000 from PC 0x1fc00014
+<10> Fetched ins 0x24020000 from PC 0x1fc00018
+<10> Decoded ins 0x24040000
+<11> Executed ins 0x24040000
+<11> Decoded ins 0x24020000
+<11> Fetched ins 0x3c010040 from PC 0x1fc0001c
+<12> Executed ins 0x24020000
+_memOp is 98fd7b0
+<12> Memory has nothing to do for ins 0x24040000
+<12> Decoded ins 0x3c010040
+<12> Fetched ins 0x34210fa0 from PC 0x1fc00020
+<13> Writing to reg 4, value: 0
+<13> Executed ins 0x3c010040
+<13> Decoded ins 0x34210fa0
+<13> Fetched ins 0x20f809 from PC 0x1fc00024
+_memOp is 98fd7b0
+<13> Memory has nothing to do for ins 0x24020000
+<14> Executed ins 0x34210fa0
+<14> Writing to reg 2, value: 0
+_memOp is 98fd7b0
+<14> Memory has nothing to do for ins 0x3c010040
+<14> Decoded ins 0x20f809
+<14> Fetched ins 0 from PC 0x1fc00028
+<15> Writing to reg 1, value: 0x400000
+<15> Executed ins 0x20f809
+<15> Fetched ins 0x8fa40000 from PC 0x400fa0
+_memOp is 98fd7b0
+<15> Memory has nothing to do for ins 0x34210fa0
+<15> Decoded ins 0
+<16> Writing to reg 1, value: 0x400fa0
+<16> Executed ins 0
+<16> Decoded ins 0x8fa40000
+<16> Fetched ins 0x27a50004 from PC 0x400fa4
+_memOp is 98fd7b0
+<16> Memory has nothing to do for ins 0x20f809
+<17> Executed ins 0x8fa40000
+<17> Writing to reg 31, value: 0x1fc0002c
+_memOp is 98fd7b0
+<17> Memory has nothing to do for ins 0
+<17> Decoded ins 0x27a50004
+<17> Fetched ins 0x3c1c0042 from PC 0x400fa8
+<18> Writing to reg 0, value: 0
+<18> Executed ins 0x27a50004
+<18> Decoded ins 0x3c1c0042
+<18> Fetched ins 0x24a60004 from PC 0x400fac
+_memOp is 804fb5c
+<18> Access memory at addr 0x7fffae48 for ins 0x8fa40000
+<19> Executed ins 0x3c1c0042
+<19> Writing to reg 4, value: 0x1
+_memOp is 804fb5c
+<19> Memory has nothing to do for ins 0x27a50004
+<19> Decoded ins 0x24a60004
+<19> Fetched ins 0x41080 from PC 0x400fb0
+<20> Writing to reg 5, value: 0x7fffae4c
+<20> Executed ins 0x24a60004
+<20> Fetched ins 0x279c1540 from PC 0x400fb4
+_memOp is 804fb5c
+<20> Memory has nothing to do for ins 0x3c1c0042
+<20> Decoded ins 0x41080
+<21> Writing to reg 28, value: 0x420000
+<21> Executed ins 0x41080
+<21> Decoded ins 0x279c1540
+<21> Fetched ins 0xc23021 from PC 0x400fb8
+_memOp is 804fb5c
+<21> Memory has nothing to do for ins 0x24a60004
+<22> Executed ins 0x279c1540
+<22> Writing to reg 6, value: 0x7fffae50
+_memOp is 804fb5c
+<22> Memory has nothing to do for ins 0x41080
+<22> Decoded ins 0xc23021
+<22> Fetched ins 0x3c010042 from PC 0x400fbc
+<23> Writing to reg 2, value: 0x4
+<23> Executed ins 0xc23021
+<23> Decoded ins 0x3c010042
+<23> Fetched ins 0x27bdffe8 from PC 0x400fc0
+_memOp is 804fb5c
+<23> Memory has nothing to do for ins 0x279c1540
+<24> Executed ins 0x3c010042
+<24> Writing to reg 28, value: 0x421540
+_memOp is 804fb5c
+<24> Memory has nothing to do for ins 0xc23021
+<24> Decoded ins 0x27bdffe8
+<24> Fetched ins 0xac269560 from PC 0x400fc4
+<25> Writing to reg 6, value: 0x7fffae54
+<25> Executed ins 0x27bdffe8
+<25> Fetched ins 0xaf85af64 from PC 0x400fc8
+_memOp is 804fb5c
+<25> Memory has nothing to do for ins 0x3c010042
+<25> Decoded ins 0xac269560
+<26> Writing to reg 1, value: 0x420000
+<26> Executed ins 0xac269560
+<26> Decoded ins 0xaf85af64
+<26> Fetched ins 0xafa00014 from PC 0x400fcc
+_memOp is 804fb5c
+<26> Memory has nothing to do for ins 0x27bdffe8
+<27> Executed ins 0xaf85af64
+<27> Writing to reg 29, value: 0x7fffae30
+_memOp is 8050014
+<27> Access memory at addr 0x419560 for ins 0xac269560
+<27> Decoded ins 0xafa00014
+<27> Fetched ins 0xf025 from PC 0x400fd0
+<28> Executed ins 0xafa00014
+<28> Decoded ins 0xf025
+<28> Fetched ins 0xc1003e3 from PC 0x400fd4
+_memOp is 8050014
+<28> Access memory at addr 0x41c4a4 for ins 0xaf85af64
+<29> Executed ins 0xf025
+_memOp is 8050014
+<29> Access memory at addr 0x7fffae44 for ins 0xafa00014
+<29> Decoded ins 0xc1003e3
+<29> Fetched ins 0xaf84af68 from PC 0x400fd8
+<30> Executed ins 0xc1003e3
+<30> Fetched ins 0 from PC 0x400f8c
+_memOp is 8050014
+<30> Memory has nothing to do for ins 0xf025
+<30> Decoded ins 0xaf84af68
+<31> Writing to reg 30, value: 0
+<31> Executed ins 0xaf84af68
+<31> Decoded ins 0
+<31> Fetched ins 0x3e00008 from PC 0x400f90
+_memOp is 8050014
+<31> Memory has nothing to do for ins 0xc1003e3
+<32> Executed ins 0
+<32> Writing to reg 31, value: 0x400fdc
+_memOp is 8050014
+<32> Access memory at addr 0x41c4a8 for ins 0xaf84af68
+<32> Decoded ins 0x3e00008
+<32> Fetched ins 0 from PC 0x400f94
+<33> Executed ins 0x3e00008
+<33> Decoded ins 0
+<33> Fetched ins 0xc100434 from PC 0x400fdc
+_memOp is 8050014
+<33> Memory has nothing to do for ins 0
+<34> Executed ins 0
+<34> Writing to reg 0, value: 0
+_memOp is 8050014
+<34> Memory has nothing to do for ins 0x3e00008
+<34> Decoded ins 0xc100434
+<34> Fetched ins 0 from PC 0x400fe0
+<35> Executed ins 0xc100434
+<35> Fetched ins 0x3e00008 from PC 0x4010d0
+_memOp is 8050014
+<35> Memory has nothing to do for ins 0
+<35> Decoded ins 0
+<36> Writing to reg 0, value: 0
+<36> Executed ins 0
+<36> Decoded ins 0x3e00008
+<36> Fetched ins 0 from PC 0x4010d4
+_memOp is 8050014
+<36> Memory has nothing to do for ins 0xc100434
+<37> Executed ins 0x3e00008
+<37> Writing to reg 31, value: 0x400fe4
+_memOp is 8050014
+<37> Memory has nothing to do for ins 0
+<37> Decoded ins 0
+<37> Fetched ins 0x3c060042 from PC 0x400fe4
+<38> Writing to reg 0, value: 0
+<38> Executed ins 0
+<38> Decoded ins 0x3c060042
+<38> Fetched ins 0x8f84af68 from PC 0x400fe8
+_memOp is 8050014
+<38> Memory has nothing to do for ins 0x3e00008
+<39> Executed ins 0x3c060042
+_memOp is 8050014
+<39> Memory has nothing to do for ins 0
+<39> Decoded ins 0x8f84af68
+<39> Fetched ins 0x8f85af64 from PC 0x400fec
+<40> Writing to reg 0, value: 0
+<40> Executed ins 0x8f84af68
+<40> Fetched ins 0x8cc69560 from PC 0x400ff0
+_memOp is 8050014
+<40> Memory has nothing to do for ins 0x3c060042
+<40> Decoded ins 0x8f85af64
+<41> Writing to reg 6, value: 0x420000
+<41> Executed ins 0x8f85af64
+<41> Decoded ins 0x8cc69560
+<41> Fetched ins 0xc100408 from PC 0x400ff4
+_memOp is 804fb5c
+<41> Access memory at addr 0x41c4a8 for ins 0x8f84af68
+<42> Executed ins 0x8cc69560
+<42> Writing to reg 4, value: 0x1
+_memOp is 804fb5c
+<42> Access memory at addr 0x41c4a4 for ins 0x8f85af64
+<42> Decoded ins 0xc100408
+<42> Fetched ins 0 from PC 0x400ff8
+<43> Writing to reg 5, value: 0x7fffae4c
+<43> Executed ins 0xc100408
+<43> Decoded ins 0
+<43> Fetched ins 0x24040001 from PC 0x401020
+_memOp is 804fb5c
+<43> Access memory at addr 0x419560 for ins 0x8cc69560
+<44> Executed ins 0
+<44> Writing to reg 6, value: 0x7fffae54
+_memOp is 804fb5c
+<44> Memory has nothing to do for ins 0xc100408
+<44> Decoded ins 0x24040001
+<44> Fetched ins 0x3c050040 from PC 0x401024
+<45> Writing to reg 31, value: 0x400ffc
+<45> Executed ins 0x24040001
+<45> Fetched ins 0x24a5104c from PC 0x401028
+_memOp is 804fb5c
+<45> Memory has nothing to do for ins 0
+<45> Decoded ins 0x3c050040
+<46> Writing to reg 0, value: 0
+<46> Executed ins 0x3c050040
+<46> Decoded ins 0x24a5104c
+<46> Fetched ins 0x24060009 from PC 0x40102c
+_memOp is 804fb5c
+<46> Memory has nothing to do for ins 0x24040001
+<47> Executed ins 0x24a5104c
+<47> Writing to reg 4, value: 0x1
+_memOp is 804fb5c
+<47> Memory has nothing to do for ins 0x3c050040
+<47> Decoded ins 0x24060009
+<47> Fetched ins 0x240203ec from PC 0x401030
+<48> Writing to reg 5, value: 0x400000
+<48> Executed ins 0x24060009
+<48> Decoded ins 0x240203ec
+<48> Fetched ins 0xc from PC 0x401034
+_memOp is 804fb5c
+<48> Memory has nothing to do for ins 0x24a5104c
+<49> Executed ins 0x240203ec
+<49> Writing to reg 5, value: 0x40104c
+_memOp is 804fb5c
+<49> Memory has nothing to do for ins 0x24060009
+<49> Decoded ins 0xc
+<49> Fetched ins 0 from PC 0x401038
+<50> Writing to reg 6, value: 0x9
+<50> Deferring execution of syscall ins 0xc
+_memOp is 804fb5c
+<50> Memory has nothing to do for ins 0x240203ec
+<51> Writing to reg 2, value: 0x3ec
+_memOp is 804fb5c
+<51> Memory has nothing to do for ins 0xc
+<52> SYSCALL! Trapping to emulation layer at PC 0x401038
+<53> Fetched ins 0 from PC 0x401038
+<54> Decoded ins 0
+<54> Fetched ins 0 from PC 0x401038
+<55> Executed ins 0
+<55> Fetched ins 0x2404000a from PC 0x40103c
+<55> Decoded ins 0
+<56> Executed ins 0
+<56> Decoded ins 0x2404000a
+<56> Fetched ins 0x240203e9 from PC 0x401040
+_memOp is 804fb5c
+<56> Memory has nothing to do for ins 0
+<57> Executed ins 0x2404000a
+<57> Writing to reg 0, value: 0
+_memOp is 804fb5c
+<57> Memory has nothing to do for ins 0
+<57> Decoded ins 0x240203e9
+<57> Fetched ins 0xc from PC 0x401044
+<58> Writing to reg 0, value: 0
+<58> Executed ins 0x240203e9
+<58> Decoded ins 0xc
+<58> Fetched ins 0 from PC 0x401048
+_memOp is 804fb5c
+<58> Memory has nothing to do for ins 0x2404000a
+<59> Deferring execution of syscall ins 0xc
+<59> Writing to reg 4, value: 0xa
+_memOp is 804fb5c
+<59> Memory has nothing to do for ins 0x240203e9
+<60> Writing to reg 2, value: 0x3e9
+_memOp is 804fb5c
+<60> Memory has nothing to do for ins 0xc
+<61> SYSCALL! Trapping to emulation layer at PC 0x401048
+<62> Fetched ins 0 from PC 0x401048

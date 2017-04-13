@@ -10,15 +10,6 @@ Writeback::~Writeback(void) {
 
 void Writeback::MainLoop(void) {
     unsigned int ins;
-    Bool writeReg;
-    Bool writeFReg;
-    Bool loWPort;
-    Bool hiWPort;
-    Bool isSyscall;
-    Bool isIllegalOp;
-    unsigned decodedDST;
-    unsigned opResultLo, opResultHi;
-
     while (1) {
         // Sample the important signals
         AWAIT_P_PHI0;
@@ -28,10 +19,9 @@ void Writeback::MainLoop(void) {
 
             ins = local_mc._ins;
 
-            cout << "No Insn " << pipeline->mem_wb.mc._pc << endl;
             int pos = pipeline->mem_wb.mc.position;
 
-            if (isSyscall) {
+            if (local_mc._isSyscall) {
 
                 DBG((debugLog,
                      "<%llu> SYSCALL! Trapping to emulation layer at PC %#x\n",
@@ -39,7 +29,7 @@ void Writeback::MainLoop(void) {
 
                 local_mc._opControl(&(local_mc), ins);
 
-            } else if (isIllegalOp) {
+            } else if (local_mc._isIllegalOp) {
 
                 printf("Illegal ins %#x at PC %#x. Terminating simulation!\n", ins,
                        local_mc._pc);
@@ -52,11 +42,8 @@ void Writeback::MainLoop(void) {
 
             } else {
 
-                cout << "Insn " << ins << " at pc " << local_mc._pc << " writeback " << local_mc._writeREG << endl;
                 if (local_mc._writeREG) {
                     _mc->_gpr[local_mc._decodedDST] = local_mc._opResultLo;
-                    cout << "Insn " << ins << " at pc " << local_mc._pc << " writes " <<
-                        local_mc._opResultLo << " to register " << local_mc._decodedDST << endl;
 
                     DBG((debugLog, "<%llu> Writing to reg %u, value: %#x\n", SIM_TIME,
                          local_mc._decodedDST, local_mc._opResultLo));
@@ -72,7 +59,7 @@ void Writeback::MainLoop(void) {
                     if (local_mc._loWPort) {
                         _mc->_lo = local_mc._opResultLo;
                         DBG((debugLog, "<%llu> Writing to Lo, value: %#x\n", SIM_TIME,
-                             opResultLo));
+                             local_mc._opResultLo));
                     }
                     if (local_mc._hiWPort) {
                         _mc->_hi = local_mc._opResultHi;
@@ -94,7 +81,8 @@ void Writeback::MainLoop(void) {
             }
 
             if (local_mc._isSyscall) {
-                pipeline->if_id._fetch_kill = FALSE;
+                pipeline->runningSyscall = false;
+                _mc->_sim_exit = local_mc._sim_exit;
                 INLOG((inlog, "%3d |WB |: SYSCALL FINISHED\n", pos));
             }
 
