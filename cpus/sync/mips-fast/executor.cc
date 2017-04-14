@@ -105,7 +105,6 @@ void Exe::MainLoop(void) {
                      SIM_TIME, ins, _mc->_pc));
             }
 
-            pipeline->ex_mem._kill = FALSE;
             AWAIT_P_PHI1;  // @negedge
 
             MipsInsn i; i.data = ins;
@@ -137,6 +136,7 @@ void Exe::MainLoop(void) {
 
             pipeline->ex_mem.mc = ex_pipe.mc;
 
+            pipeline->ex_mem._kill = FALSE;
         } else {
             AWAIT_P_PHI1;  // @negedge
             pipeline->ex_mem._kill = TRUE;

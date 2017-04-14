@@ -65,6 +65,7 @@ public:
     unsigned     _decodedShiftAmt;           // Shift amount
 
     unsigned int *_gpr;                      // general-purpose integer registers
+    unsigned int _padding[31];
 
     std::string insname;
     int position;

@@ -30,6 +30,9 @@
 #include "misc.h"
 #include "mips.h"
 
+extern FILE *inlog;
+#define INLOG(a) {fprintf a ; fflush(inlog); }
+
 // map open(), creat() flags from host architecture to native
 // architecture
 unsigned int mode_remap (unsigned int);
@@ -1056,6 +1059,7 @@ void SysCall::EmulateSysCall (void)
 
   default:
     PrintError ("Unimplemented system call");
+    INLOG((inlog, "WRONG CALL: %d\n", GetReg(REG_V0)));
     UNIX_RETURN (0);
     break;
   }

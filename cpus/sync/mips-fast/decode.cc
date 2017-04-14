@@ -102,7 +102,9 @@ void Decode::MainLoop(void) {
             // Let it fetch pc+4.
             // If previous one was branch, pc would be updated
             // in the same +ve cycle by executor.cc
-            if(!pipeline->if_id._was_branch) {
+            MipsInsn i; i.data = ins;
+            if(!pipeline->if_id._was_branch &&
+               !(i.reg.op == 0 && i.reg.func == 0xc)) {
                 _mc->_pc = _mc->_pc + 4;
             }
 

@@ -21,7 +21,7 @@ ifeq ($(ARCH), sgi)
 else
 ifeq ($(ARCH), x86)
 # x86 settings
-	OPT=-O3
+	OPT=-O3 -g
 #	CCNOOPT=/mnt/gcc-3.1.1/bin/gcc
 #	CXXNOOPT=/mnt/gcc-3.1.1/bin/g++
 #	CC=$(CCNOOPT)  $(OPT)

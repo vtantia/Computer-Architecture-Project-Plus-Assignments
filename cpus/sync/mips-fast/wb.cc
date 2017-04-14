@@ -22,17 +22,20 @@ void Writeback::MainLoop(void) {
             int pos = pipeline->mem_wb.mc.position;
 
             if (local_mc._isSyscall) {
-                for (int kk=0; kk<32; kk++) {
-                    INLOG((inlog, "Register %d is %#x\n", kk, _mc->_gpr[kk]));
-                }
+                // for (int kk=0; kk<32; kk++) {
+                //     INLOG((inlog, "Register %d is %#x\n", kk, _mc->_gpr[kk]));
+                // }
                 DBG((debugLog,
                      "<%llu> SYSCALL! Trapping to emulation layer at PC %#x\n",
                      SIM_TIME, _mc->_pc));
 
+                INLOG((inlog, "Executing syscall now\n"));
                 local_mc._opControl(&(local_mc), ins);
-                for (int kk=0; kk<32; kk++) {
-                    INLOG((inlog, "Register %d is %#x\n", kk, _mc->_gpr[kk]));
-                }
+                // for (int kk=0; kk<32; kk++) {
+                //     INLOG((inlog, "Register %d is %#x\n", kk, _mc->_gpr[kk]));
+                // }
+
+                _mc->_pc = _mc->_pc + 4;
 
             } else if (local_mc._isIllegalOp) {
 

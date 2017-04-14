@@ -73,6 +73,10 @@ void Memory::MainLoop(void) {
             AWAIT_P_PHI1;  // @negedge
             pipeline->mem_wb._kill = TRUE;
 
+            int pos = pipeline->ex_mem.mc.position;
+
+            INLOG((inlog, "%3d |MEM|: Dead\n", pos));
+
             // If pipeline is stalled, next instruction should not
             // look for bypass values here
             pipeline->mem_wb.mc._writeREG = false;
