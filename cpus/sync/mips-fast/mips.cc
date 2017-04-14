@@ -17,8 +17,9 @@ Mipc::Mipc(Mem *m) : _l('M') {
     _mem = m;
     _sys = new MipcSysCall(this);  // Allocate syscall layer
 
-    _gpr = (unsigned int*)malloc(32 * sizeof(unsigned int));
-    _gpr[0] = 0;
+    // _gpr = (unsigned int*)malloc(32 * sizeof(unsigned int));
+    // _gpr[0] = 0;
+    _gpr = (unsigned int*)calloc(sizeof(unsigned int), 32);
 
     insname = "undefined";
     src1 = -1; src2 = -1; subreg = -1;

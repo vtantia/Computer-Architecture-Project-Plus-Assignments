@@ -34,6 +34,8 @@ void Exe::MainLoop(void) {
             isSyscall = ex_pipe.mc._isSyscall;
             isIllegalOp = ex_pipe.mc._isIllegalOp;
 
+            int beforelo = -89, beforehi = -89;
+
             if (!isSyscall && !isIllegalOp) {
                 // TODO: Think about _lo, _hi
 
@@ -50,13 +52,25 @@ void Exe::MainLoop(void) {
                     getBypassValue(&(ex_pipe.mc), &(pipeline->ex_mem.mc));
                 }
 
-                // Bypass for lo and hi
+                // Bypass for lo
+                if (pipeline->mem_wb.mc._loWPort) {
+                    INLOG((inlog, "%3d |EX |: Got low value"));
+                    ex_pipe.mc._lo = pipeline->mem_wb.mc._opResultLo;
+                }
                 if (pipeline->ex_mem.mc._loWPort) {
+                    INLOG((inlog, "%3d |EX |: Got low value 2"));
                     ex_pipe.mc._lo = pipeline->ex_mem.mc._opResultLo;
+                }
+
+                // Bypass for hi
+                if (pipeline->mem_wb.mc._hiWPort) {
+                    ex_pipe.mc._hi = pipeline->mem_wb.mc._opResultHi;
                 }
                 if (pipeline->ex_mem.mc._hiWPort) {
                     ex_pipe.mc._hi = pipeline->ex_mem.mc._opResultHi;
                 }
+
+                beforelo = ex_pipe.mc._lo; beforehi = ex_pipe.mc._hi;
 
                 MipsInsn i; i.data = ins;
                 if (i.reg.op == 0 && (i.reg.func == 9 || i.reg.func == 8)) {
@@ -96,13 +110,30 @@ void Exe::MainLoop(void) {
 
             MipsInsn i; i.data = ins;
             INLOG((inlog,
-                   "%3d |EX |: %s took: %d, %d and %d (imm) to write %#x into %d. PC now is %#x\n",
+                   "%3d |EX |: %s took: %d, %d and %d (imm)",
                    ex_pipe.mc.position, ex_pipe.mc.insname.c_str(),
-                   ex_pipe.mc.src1 == -1 ? -1 : ex_pipe.mc._decodedSRC1,
-                   ex_pipe.mc.src2 == -1 ? -1 : ex_pipe.mc._decodedSRC2,
-                   i.imm.imm,
-                   ex_pipe.mc._writeREG ? ex_pipe.mc._opResultLo : (unsigned int)(-723923),
-                   ex_pipe.mc._decodedDST, _mc->_pc));
+                   ex_pipe.mc.src1 == -7 ? -99 : ex_pipe.mc._decodedSRC1,
+                   ex_pipe.mc.src2 == -7 ? -99 : ex_pipe.mc._decodedSRC2,
+                   i.imm.imm));
+
+            if (ex_pipe.mc._writeREG) {
+                INLOG((inlog,
+                       "to write %#x into %d",
+                       ex_pipe.mc._writeREG ? ex_pipe.mc._opResultLo : (unsigned int)(-6),
+                       ex_pipe.mc._decodedDST));
+            }
+
+            INLOG((inlog, ". PC now is %#x\n", _mc->_pc));
+
+            if (ex_pipe.mc.insname == "mflo" ||
+                ex_pipe.mc.insname == "mfhi" ||
+                ex_pipe.mc.insname == "mult") {
+                INLOG((inlog,
+                       "%3d |EX |: Before lo %#x, hi %#x. Now lo %#x hi %#x\n",
+                       ex_pipe.mc.position,
+                       beforelo, beforehi,
+                       ex_pipe.mc._opResultLo, ex_pipe.mc._opResultHi));
+            }
 
             pipeline->ex_mem.mc = ex_pipe.mc;
 

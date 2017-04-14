@@ -837,7 +837,7 @@ void Mipc::func_mfhi(Mipc *mc, unsigned ins) { mc->_opResultLo = mc->_hi; }
 
 void Mipc::func_mflo(Mipc *mc, unsigned ins) { mc->_opResultLo = mc->_lo; }
 
-void Mipc::func_mthi(Mipc *mc, unsigned ins) { mc->_opResultLo = mc->_decodedSRC1; }
+void Mipc::func_mthi(Mipc *mc, unsigned ins) { mc->_opResultHi = mc->_decodedSRC1; }
 
 void Mipc::func_mtlo(Mipc *mc, unsigned ins) { mc->_opResultLo = mc->_decodedSRC2; }
 

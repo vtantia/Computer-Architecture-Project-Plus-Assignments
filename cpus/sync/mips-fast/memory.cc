@@ -24,6 +24,11 @@ void Memory::MainLoop(void) {
                 getBypassValue(&(mem_pipe.mc), &(pipeline->mem_wb.mc));
             }
 
+            // If this instruction had a subreg
+            if (mem_pipe.mc.subreg == pipeline->mem_wb.mc._decodedDST) {
+                mem_pipe.mc._subregOperand = pipeline->mem_wb.mc._opResultLo;
+            }
+
             AWAIT_P_PHI1;  // @negedge
 
             DBG((debugLog, "_memOp is %x\n", mem_pipe.mc._memOp));
@@ -38,11 +43,19 @@ void Memory::MainLoop(void) {
                            mem_pipe.mc._decodedDST,
                            mem_pipe.mc._MAR,
                            mem_pipe.mc._opResultLo));
+                    if (mem_pipe.mc._opResultLo == -1) {
+                        INLOG((inlog, "%3d: MEM SAYS DANGER into reg !!!\n", mem_pipe.mc.position));
+                    }
                 } else {
                     INLOG((inlog,
-                           "%3d |MEM|: Some other memory op at MAR %#x\n",
+                           "%3d |MEM|: Writing to memory MAR %#x value of reg %d which is %#x\n",
                            mem_pipe.mc.position,
-                           mem_pipe.mc._MAR));
+                           mem_pipe.mc._MAR,
+                           mem_pipe.mc._decodedDST,
+                           mem_pipe.mc._gpr[mem_pipe.mc._decodedDST]));
+                    if (mem_pipe.mc._gpr[mem_pipe.mc._decodedDST] == -1) {
+                        INLOG((inlog, "%3d: MEM SAYS DANGER from reg !!!\n", mem_pipe.mc.position));
+                    }
                 }
 
                 DBG((debugLog, "<%llu> Access memory at addr %#x for ins %#x\n",

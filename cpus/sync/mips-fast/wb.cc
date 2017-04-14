@@ -22,12 +22,17 @@ void Writeback::MainLoop(void) {
             int pos = pipeline->mem_wb.mc.position;
 
             if (local_mc._isSyscall) {
-
+                for (int kk=0; kk<32; kk++) {
+                    INLOG((inlog, "Register %d is %#x\n", kk, _mc->_gpr[kk]));
+                }
                 DBG((debugLog,
                      "<%llu> SYSCALL! Trapping to emulation layer at PC %#x\n",
                      SIM_TIME, _mc->_pc));
 
                 local_mc._opControl(&(local_mc), ins);
+                for (int kk=0; kk<32; kk++) {
+                    INLOG((inlog, "Register %d is %#x\n", kk, _mc->_gpr[kk]));
+                }
 
             } else if (local_mc._isIllegalOp) {
 
@@ -48,6 +53,10 @@ void Writeback::MainLoop(void) {
                     DBG((debugLog, "<%llu> Writing to reg %u, value: %#x\n", SIM_TIME,
                          local_mc._decodedDST, local_mc._opResultLo));
 
+                    if (local_mc._opResultLo == -1) {
+                        INLOG((inlog, "%3d: DANGER !!!!\n", pos));
+                    }
+
                 } else if (local_mc._writeFREG) {
                     _mc->_fpr[(local_mc._decodedDST) >> 1].l[FP_TWIDDLE ^ ((local_mc._decodedDST)&1)] =
                         local_mc._opResultLo;
@@ -58,11 +67,15 @@ void Writeback::MainLoop(void) {
                 } else if (local_mc._loWPort || local_mc._hiWPort) {
                     if (local_mc._loWPort) {
                         _mc->_lo = local_mc._opResultLo;
+                        pipeline->id_ex.mc._lo = local_mc._opResultLo;
+                        INLOG((inlog, "%3d |WB |: Writing LO value %#x\n", pos, _mc->_lo));
                         DBG((debugLog, "<%llu> Writing to Lo, value: %#x\n", SIM_TIME,
                              local_mc._opResultLo));
                     }
                     if (local_mc._hiWPort) {
                         _mc->_hi = local_mc._opResultHi;
+                        pipeline->id_ex.mc._hi = local_mc._opResultHi;
+                        INLOG((inlog, "%3d |WB |: Writing HI value %#x\n", pos, _mc->_hi));
                         DBG((debugLog, "<%llu> Writing to Hi, value: %#x\n", SIM_TIME,
                              local_mc._opResultHi));
                     }
@@ -76,7 +89,7 @@ void Writeback::MainLoop(void) {
 
             if (!local_mc._isSyscall && !local_mc._isIllegalOp) {
                 if (local_mc._writeREG) {
-                    INLOG((inlog, "%3d |WB |: Writing to %d value %d\n", pos, local_mc._decodedDST, local_mc._opResultLo));
+                    INLOG((inlog, "%3d |WB |: Writeback to reg %d value %#x\n", pos, local_mc._decodedDST, local_mc._opResultLo));
                 }
             }
 

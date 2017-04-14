@@ -34,11 +34,11 @@ bool Decode::doesThisRegHaveHazard(int reg, int ins) {
         case 0xd:
         case 0xe:
             onesrc = i.imm.rs;
-            twosrc = -1;
+            twosrc = -7;
             break;
         case 0xf:
-            onesrc = -1;
-            twosrc = -1;
+            onesrc = -7;
+            twosrc = -7;
             break;
         case 2:
         case 3:
@@ -62,7 +62,7 @@ bool Decode::doesThisRegHaveHazard(int reg, int ins) {
         case 0x2b:
         case 0x2e:
             onesrc = i.reg.rs;
-            twosrc = -1;
+            twosrc = -7;
             break;
         // SUBREG waale
         case 0x22:
@@ -79,11 +79,11 @@ bool Decode::doesThisRegHaveHazard(int reg, int ins) {
     // Handling subreg cases separately
     if (subreg) {
         pipeline->id_ex.mc.subreg = twosrc;
+        return reg == onesrc;
     } else {
-        pipeline->id_ex.mc.subreg = -1;
+        pipeline->id_ex.mc.subreg = -7;
+        return !(reg != onesrc && reg != twosrc);
     }
-
-    return !(reg != onesrc && reg != twosrc);
 }
 
 void Decode::MainLoop(void) {
@@ -127,8 +127,8 @@ void Decode::MainLoop(void) {
             pipeline->id_ex.mc._pc = mypc;
             pipeline->id_ex.mc.Dec(ins);
 
-            INLOG((inlog, "%3d |D  |: %13u ==> %s, requires %d, %d, dest is %d. Fetched from %#x\n",
-                   _nfetched, ins,
+            INLOG((inlog, "%3d |D  |: ==> %s <==, requires %d, %d, dest is %d. Fetched from %#x\n",
+                   _nfetched,
                    pipeline->id_ex.mc.insname.c_str(), pipeline->id_ex.mc.src1,
                    pipeline->id_ex.mc.src2, pipeline->id_ex.mc._decodedDST,
                    mypc));

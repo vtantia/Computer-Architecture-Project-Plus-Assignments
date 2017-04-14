@@ -9,4 +9,6 @@ int main() {
     printf("%x\n", *(int*)((void*)&b+4));
     printf("%x\n", *(int*)(void*)(&b));
     printf("%x\n", a);
+
+    return 0;
 }
