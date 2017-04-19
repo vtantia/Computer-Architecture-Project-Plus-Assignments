@@ -2,6 +2,7 @@
 #include "xed-category-enum.h"
 #include <fstream>
 #include <iostream>
+#define bitI(value, i) ((value >> i) & 1)
 
 void Exit();
 
@@ -60,6 +61,17 @@ BtbEntry btb[2][NUM_BTB][4];
 UINT32 totalpredBTB[2] = {0};
 UINT32 missesBTB[2] = {0};
 
+// For Project
+// TODO:
+// 1. Analyze how this will work in hardware in terms of speed.
+// 2. Analyze how it can be used in other ways to improve branch prediction.
+// 3. Try for various storage budgets. Ideally find an empirical formula
+//    for improvement/mispredictions in terms of storage budget.
+#define HASH_SIZE 1024
+#define WIDTH 9
+INT32 weights[HASH_SIZE][WIDTH] = {0};
+UINT32 mispredPerceptron = 0;
+
 std::ostream *out = &cerr;
 
 /* ===================================================================== */
@@ -98,6 +110,18 @@ inline VOID updateCount(UINT32 *toChange, BOOL isTaken, UINT32 limit) {
 VOID BranchPredFNBT(ADDRINT insAddr, ADDRINT bTargetAddr, BOOL isTaken) {
   btbHist = (btbHist << 1) % NUM_BTB;
   btbHist += isTaken;
+
+  INT32 out = 0;
+  for(UINT32 i=0; i < WIDTH; i++) {
+    out += bitI(g_bht, i) * weights[insAddr % HASH_SIZE][i];
+  }
+  INT32 dir = (isTaken ? 1 : -1);
+  mispredPerceptron += ((out * dir) < 0);
+  if((out*dir)<0 || (out < 10 && out > -10)) {
+    for(UINT32 i=0; i<WIDTH; i++) {
+      weights[insAddr % HASH_SIZE][i] += dir * bitI(g_bht, i);
+    }
+  }
 
   totPreds++;
   BOOL isForward = (bTargetAddr > insAddr);
@@ -311,6 +335,7 @@ void Exit() {
        << " & " << mispredGshare << " & " << mispredHyb1 << " & "
        << mispredHyb2maj << " & " << mispredHyb2meta << endl;
   *out << "===============================================" << endl;
+  *out << "Mispredictions in Perceptron : " << mispredPerceptron << endl;
   *out << "Mispredictions in FNBT : " << mispredFNBT[0] << " "
        << mispredFNBT[1] << " " << mispredFNBT[2] << endl;
   *out << "Mispredictions in bimodal : " << mispredBimod[0] << " "
