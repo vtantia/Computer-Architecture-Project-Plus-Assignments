@@ -64,14 +64,26 @@ UINT32 missesBTB[2] = {0};
 // For Project
 // TODO:
 // 1. Analyze how this will work in hardware in terms of speed.
-// 2. Analyze how it can be used in other ways to improve branch prediction.
+// 2. Analyze how it can be used in other ways to improve branch
+// prediction.
 // 3. Try for various storage budgets. Ideally find an empirical formula
 //    for improvement/mispredictions in terms of storage budget.
-#define G_HASH_SIZE 256 //256
-#define G_WIDTH 20 // 18
-#define S_HASH_SIZE 128 //256
-#define S_WIDTH 10 // 18
+
+// GAS hash size
+#define G_HASH_SIZE 512
+
+// GAS width of history
+#define G_WIDTH 8
+
+// SAS hash size
+#define S_HASH_SIZE 512
+
+// SAS width of history
+#define S_WIDTH 7
+
+// Full hash size
 #define FH_HASH_SIZE 256
+
 #define FH_WIDTH (S_WIDTH + G_WIDTH)
 
 INT32 g_weights[G_HASH_SIZE][G_WIDTH] = {0};
@@ -85,7 +97,7 @@ UINT32 fh_mispredPerceptron[3] = {0};
 
 UINT32 p_mispredHyb[3] = {0};
 UINT32 gp_hist = 0;
-UINT32 hyb1_pmeta[(1<<G_WIDTH)] = {0};
+UINT32 hyb1_pmeta[MIN(1 << G_WIDTH, 1<<10)] = {0};
 
 std::ostream *out = &cerr;
 
@@ -137,7 +149,7 @@ VOID BranchPred(ADDRINT insAddr, ADDRINT bTargetAddr, BOOL isTaken) {
 
   INT32 dir = (isTaken ? 1 : -1);
   INT32 g_out = 0;
-  for(UINT32 i=0; i < G_WIDTH; i++) {
+  for (UINT32 i = 0; i < G_WIDTH; i++) {
     g_out += bitI(gp_hist, i) * g_weights[insAddr % G_HASH_SIZE][i];
   }
   UINT32 gp_pred = (g_out >= 0);
@@ -145,15 +157,16 @@ VOID BranchPred(ADDRINT insAddr, ADDRINT bTargetAddr, BOOL isTaken) {
   g_mispredPerceptron[0] += isForward * gp_isMisPred;
   g_mispredPerceptron[1] += (!isForward) * gp_isMisPred;
   g_mispredPerceptron[2] += gp_isMisPred;
-  if((g_out*dir)<0 || (g_out < 15 && g_out > -15)) {
-    for(UINT32 i=0; i<G_WIDTH; i++) {
-      updateCountSigned(&g_weights[insAddr % G_HASH_SIZE][i], dir * bitI(gp_hist, i), 7);
+  if ((g_out * dir) < 0 || (g_out < 15 && g_out > -15)) {
+    for (UINT32 i = 0; i < G_WIDTH; i++) {
+      updateCountSigned(&g_weights[insAddr % G_HASH_SIZE][i],
+                        dir * bitI(gp_hist, i), 7);
     }
   }
 
   UINT32 sp_hist = sp_bht[insAddr % S_HASH_SIZE];
   INT32 s_out = 0;
-  for(UINT32 i=0; i < S_WIDTH; i++) {
+  for (UINT32 i = 0; i < S_WIDTH; i++) {
     s_out += bitI(sp_hist, i) * s_weights[insAddr % S_HASH_SIZE][i];
   }
   UINT32 sp_pred = (s_out >= 0);
@@ -161,30 +174,35 @@ VOID BranchPred(ADDRINT insAddr, ADDRINT bTargetAddr, BOOL isTaken) {
   s_mispredPerceptron[0] += isForward * sp_isMisPred;
   s_mispredPerceptron[1] += (!isForward) * sp_isMisPred;
   s_mispredPerceptron[2] += sp_isMisPred;
-  if((s_out*dir)<0 || (s_out < 15 && s_out > -15)) {
-    for(UINT32 i=0; i<S_WIDTH; i++) {
-      updateCountSigned(&s_weights[insAddr % S_HASH_SIZE][i], dir * bitI(sp_hist, i), 7);
+  if ((s_out * dir) < 0 || (s_out < 15 && s_out > -15)) {
+    for (UINT32 i = 0; i < S_WIDTH; i++) {
+      updateCountSigned(&s_weights[insAddr % S_HASH_SIZE][i],
+                        dir * bitI(sp_hist, i), 7);
     }
   }
- 
+
   UINT32 p_needUpdate = (gp_pred != sp_pred);
   p_mispredHyb[0] +=
-      isForward * ((hyb1_pmeta[gp_hist] < 2) ? sp_isMisPred: gp_isMisPred);
+      isForward *
+      ((hyb1_pmeta[gp_hist & 0x3ff] < 2) ? sp_isMisPred : gp_isMisPred);
   p_mispredHyb[1] +=
-      (!isForward) * ((hyb1_pmeta[gp_hist] < 2) ? sp_isMisPred : gp_isMisPred);
-  p_mispredHyb[2] += (hyb1_pmeta[gp_hist] < 2) ? sp_isMisPred : gp_isMisPred;
+      (!isForward) *
+      ((hyb1_pmeta[gp_hist & 0x3ff] < 2) ? sp_isMisPred : gp_isMisPred);
+  p_mispredHyb[2] +=
+      (hyb1_pmeta[gp_hist & 0x3ff] < 2) ? sp_isMisPred : gp_isMisPred;
   if (p_needUpdate) {
-     //GAg is assumed on high end of counter
+    // GAg is assumed on high end of counter
     UINT32 gpCorrect = (!gp_isMisPred);
-    updateCount(&hyb1_pmeta[gp_hist], gpCorrect, 3);
+    updateCount(&hyb1_pmeta[gp_hist & 0x3ff], gpCorrect, 3);
   }
 
   INT32 fh_out = 0;
-  for(UINT32 i=0; i < S_WIDTH; i++) {
+  for (UINT32 i = 0; i < S_WIDTH; i++) {
     fh_out += bitI(sp_hist, i) * fh_weights[insAddr % FH_HASH_SIZE][i];
   }
-  for(UINT32 i=0; i < G_WIDTH; i++) {
-    fh_out += bitI(gp_hist, i) * fh_weights[insAddr % FH_HASH_SIZE][i + S_WIDTH];
+  for (UINT32 i = 0; i < G_WIDTH; i++) {
+    fh_out +=
+        bitI(gp_hist, i) * fh_weights[insAddr % FH_HASH_SIZE][i + S_WIDTH];
   }
 
   UINT32 fh_isMisPred = ((fh_out * dir) < 0);
@@ -192,24 +210,21 @@ VOID BranchPred(ADDRINT insAddr, ADDRINT bTargetAddr, BOOL isTaken) {
   fh_mispredPerceptron[1] += (!isForward) * fh_isMisPred;
   fh_mispredPerceptron[2] += fh_isMisPred;
 
-  if((fh_out*dir) < 0 || (fh_out < 15 && fh_out > -15)) {
-    for(UINT32 i=0; i<S_WIDTH; i++) {
-      updateCountSigned(&fh_weights[insAddr % FH_HASH_SIZE][i], dir * bitI(sp_hist, i), 7);
+  if ((fh_out * dir) < 0 || (fh_out < 15 && fh_out > -15)) {
+    for (UINT32 i = 0; i < S_WIDTH; i++) {
+      updateCountSigned(&fh_weights[insAddr % FH_HASH_SIZE][i],
+                        dir * bitI(sp_hist, i), 7);
     }
-    for(UINT32 i=0; i<G_WIDTH; i++) {
-      updateCountSigned(&fh_weights[insAddr % FH_HASH_SIZE][i + S_WIDTH], dir * bitI(gp_hist, i), 7);
+    for (UINT32 i = 0; i < G_WIDTH; i++) {
+      updateCountSigned(&fh_weights[insAddr % FH_HASH_SIZE][i + S_WIDTH],
+                        dir * bitI(gp_hist, i), 7);
     }
   }
 
-
-
-  gp_hist = ((gp_hist << 1) + isTaken) & ((1<<G_WIDTH) - 1);
+  gp_hist = ((gp_hist << 1) + isTaken) & ((1 << G_WIDTH) - 1);
   sp_bht[insAddr % S_HASH_SIZE] =
-      ((sp_bht[insAddr % S_HASH_SIZE] << 1) + isTaken) & ((1 << S_WIDTH) - 1);
-
-
-
-
+      ((sp_bht[insAddr % S_HASH_SIZE] << 1) + isTaken) &
+      ((1 << S_WIDTH) - 1);
 
   totPreds++;
   directionCount[isForward]++;
@@ -414,6 +429,14 @@ void Exit() {
        << directionCount[1] << endl;
   *out << "Total number of predictions tried for backward: "
        << directionCount[0] << endl;
+
+  *out << "G_HASH_SIZE: " << G_HASH_SIZE << endl;
+  *out << "G_WIDTH:" << G_WIDTH << endl;
+  *out << "S_HASH_SIZE: " << S_HASH_SIZE << endl;
+  *out << "S_WIDTH:" << S_WIDTH << endl;
+  *out << "FH_HASH_SIZE: " << FH_HASH_SIZE << endl;
+  *out << "FH_WIDTH:" << FH_WIDTH << endl;
+
   *out << " & FNBT & Bimodal & SAg & GAg & gshare & Hybrid of SAg and GAg "
           "& Hybrid of All: Majority Voter & Hybrid of All: Three Tables"
        << endl;
@@ -422,11 +445,23 @@ void Exit() {
        << " & " << mispredGshare << " & " << mispredHyb1 << " & "
        << mispredHyb2maj << " & " << mispredHyb2meta << endl;
   *out << "===============================================" << endl;
-  *out << "Mispredictions in G-Perceptron : " << g_mispredPerceptron[0] << " " << g_mispredPerceptron[1] << " " << g_mispredPerceptron[2] << endl;
-  *out << "Mispredictions in S-Perceptron : " << s_mispredPerceptron[0] << " " << s_mispredPerceptron[1] << " " << s_mispredPerceptron[2] << endl;
-  *out << "Mispredictions in FH-Perceptron : " << fh_mispredPerceptron[0] << " " << fh_mispredPerceptron[1] << " " << fh_mispredPerceptron[2] << endl;
-  *out << "Mispredictions in meta-predictor for G-Perceptron and S-perceptron: " << p_mispredHyb[0] << " " << p_mispredHyb[1] << " " << p_mispredHyb[2] << endl;
-  *out << "Mispredictions in meta-predictor for G-Perceptron and S-perceptron: " << p_mispredHyb[0] << " " << p_mispredHyb[1] << " " << p_mispredHyb[2] << endl;
+  *out << "Mispredictions in G-Perceptron : " << g_mispredPerceptron[0]
+       << " " << g_mispredPerceptron[1] << " " << g_mispredPerceptron[2]
+       << endl;
+  *out << "Mispredictions in S-Perceptron : " << s_mispredPerceptron[0]
+       << " " << s_mispredPerceptron[1] << " " << s_mispredPerceptron[2]
+       << endl;
+  *out << "Mispredictions in FH-Perceptron : " << fh_mispredPerceptron[0]
+       << " " << fh_mispredPerceptron[1] << " " << fh_mispredPerceptron[2]
+       << endl;
+  *out << "Mispredictions in meta-predictor for G-Perceptron and "
+          "S-perceptron: "
+       << p_mispredHyb[0] << " " << p_mispredHyb[1] << " "
+       << p_mispredHyb[2] << endl;
+  *out << "Mispredictions in meta-predictor for G-Perceptron and "
+          "S-perceptron: "
+       << p_mispredHyb[0] << " " << p_mispredHyb[1] << " "
+       << p_mispredHyb[2] << endl;
   *out << "Mispredictions in FNBT : " << mispredFNBT[0] << " "
        << mispredFNBT[1] << " " << mispredFNBT[2] << endl;
   *out << "Mispredictions in bimodal : " << mispredBimod[0] << " "
