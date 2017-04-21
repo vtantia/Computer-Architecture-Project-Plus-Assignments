@@ -29,14 +29,14 @@ UINT32 mispredBimod[3] = {0};
 UINT32 bimod[512] = {0};
 //
 UINT32 sag_bht[1024] = {0};
-UINT32 sag_pht[2048] = {0};
+UINT32 sag_pht[512] = {0};
 UINT32 mispredSag[3] = {0};
 //
 UINT32 g_bht = 0;
-UINT32 gag_pht[4096] = {0};
+UINT32 gag_pht[512] = {0};
 UINT32 mispredGag[3] = {0};
 //
-UINT32 gshare_pht[4096] = {0};
+UINT32 gshare_pht[512] = {0};
 UINT32 mispredGshare[3] = {0};
 //
 UINT32 mispredHyb1[3] = {0};
@@ -70,19 +70,19 @@ UINT32 missesBTB[2] = {0};
 //    for improvement/mispredictions in terms of storage budget.
 
 // GAS hash size
-#define G_HASH_SIZE 512
+#define G_HASH_SIZE XXX1
 
 // GAS width of history
-#define G_WIDTH 8
+#define G_WIDTH XXX2
 
 // SAS hash size
-#define S_HASH_SIZE 512
+#define S_HASH_SIZE XXX3
 
 // SAS width of history
-#define S_WIDTH 7
+#define S_WIDTH XXX4
 
 // Full hash size
-#define FH_HASH_SIZE 256
+#define FH_HASH_SIZE XXX5
 
 #define FH_WIDTH (S_WIDTH + G_WIDTH)
 
@@ -234,11 +234,11 @@ VOID BranchPred(ADDRINT insAddr, ADDRINT bTargetAddr, BOOL isTaken) {
   mispredFNBT[2] += isForward ? isTaken : !isTaken;
 
   mispredBimod[0] +=
-      isForward * ((bimod[(insAddr) % 5500] < 2) ? isTaken : !isTaken);
+      isForward * ((bimod[(insAddr) % 512] < 2) ? isTaken : !isTaken);
   mispredBimod[1] +=
-      (!isForward) * ((bimod[(insAddr) % 5500] < 2) ? isTaken : !isTaken);
-  mispredBimod[2] += (bimod[(insAddr) % 5500] < 2) ? isTaken : !isTaken;
-  updateCount(&bimod[(insAddr) % 5500], isTaken, 7);
+      (!isForward) * ((bimod[(insAddr) % 512] < 2) ? isTaken : !isTaken);
+  mispredBimod[2] += (bimod[(insAddr) % 512] < 2) ? isTaken : !isTaken;
+  updateCount(&bimod[(insAddr) % 512], isTaken, 3);
 
   UINT32 hist_sag = sag_bht[insAddr % 1024];
   UINT32 sag_pred = !(sag_pht[hist_sag] < 2);
@@ -247,7 +247,7 @@ VOID BranchPred(ADDRINT insAddr, ADDRINT bTargetAddr, BOOL isTaken) {
   mispredSag[2] += (sag_pred) ? !isTaken : isTaken;
   updateCount(&sag_pht[hist_sag], isTaken, 3);
   sag_bht[insAddr % 1024] =
-      ((sag_bht[insAddr % 1024] << 1) + isTaken) & 0x7ff;
+      ((sag_bht[insAddr % 1024] << 1) + isTaken) & 0x1ff;
 
   UINT32 gag_pred = !(gag_pht[g_bht] < 4);
   mispredGag[0] += isForward * ((gag_pred) ? !isTaken : isTaken);
@@ -262,52 +262,52 @@ VOID BranchPred(ADDRINT insAddr, ADDRINT bTargetAddr, BOOL isTaken) {
   mispredGshare[2] += (gshare_pred) ? !isTaken : isTaken;
   updateCount(&gshare_pht[index], isTaken, 7);
 
- // UINT32 needUpdate = (gag_pred != sag_pred);
- // mispredHyb1[0] +=
- //     isForward * ((hyb1_meta[g_bht] < 2) ? (isTaken != sag_pred)
- //                                         : (isTaken != gag_pred));
- // mispredHyb1[1] +=
- //     (!isForward) * ((hyb1_meta[g_bht] < 2) ? (isTaken != sag_pred)
- //                                            : (isTaken != gag_pred));
- // mispredHyb1[2] += (hyb1_meta[g_bht] < 2) ? (isTaken != sag_pred)
- //                                          : (isTaken != gag_pred);
- // if (needUpdate) {
- //   // GAg is assumed on high end of counter
- //   UINT32 gagCorrect = (gag_pred == isTaken);
- //   updateCount(&hyb1_meta[g_bht], gagCorrect, 3);
- // }
+  UINT32 needUpdate = (gag_pred != sag_pred);
+  mispredHyb1[0] +=
+      isForward * ((hyb1_meta[g_bht] < 2) ? (isTaken != sag_pred)
+                                          : (isTaken != gag_pred));
+  mispredHyb1[1] +=
+      (!isForward) * ((hyb1_meta[g_bht] < 2) ? (isTaken != sag_pred)
+                                             : (isTaken != gag_pred));
+  mispredHyb1[2] += (hyb1_meta[g_bht] < 2) ? (isTaken != sag_pred)
+                                           : (isTaken != gag_pred);
+  if (needUpdate) {
+    // GAg is assumed on high end of counter
+    UINT32 gagCorrect = (gag_pred == isTaken);
+    updateCount(&hyb1_meta[g_bht], gagCorrect, 3);
+  }
 
- // UINT32 majVote = (gshare_pred + gag_pred + sag_pred) > 1;
- // mispredHyb2maj[0] += isForward * ((majVote != isTaken));
- // mispredHyb2maj[1] += (!isForward) * ((majVote != isTaken));
- // mispredHyb2maj[2] += (majVote != isTaken);
+  UINT32 majVote = (gshare_pred + gag_pred + sag_pred) > 1;
+  mispredHyb2maj[0] += isForward * ((majVote != isTaken));
+  mispredHyb2maj[1] += (!isForward) * ((majVote != isTaken));
+  mispredHyb2maj[2] += (majVote != isTaken);
 
- // UINT32 metaVote = 0;
- // if (hyb2_s_g[g_bht] < 2 && hyb2_s_gsh[g_bht] < 2) {
- //   metaVote = sag_pred;
- // } else if (hyb2_g_gsh[g_bht] > 1 && hyb2_s_gsh[g_bht] > 1) {
- //   metaVote = gshare_pred;
- // } else if (hyb2_g_gsh[g_bht] < 2 && hyb2_s_g[g_bht] > 1) {
- //   metaVote = gag_pred;
- // } else {
- //   metaVote = (gshare_pred + gag_pred + sag_pred) > 1;
- // }
- // mispredHyb2meta[0] += isForward * ((metaVote != isTaken));
- // mispredHyb2meta[1] += (!isForward) * ((metaVote != isTaken));
- // mispredHyb2meta[2] += (metaVote != isTaken);
- // UINT32 update_s_g = ((!gag_pred) * sag_pred) + (gag_pred * (!sag_pred));
- // UINT32 update_s_gsh =
- //     ((!gshare_pred) * sag_pred) + (gshare_pred * (!sag_pred));
- // UINT32 update_g_gsh =
- //     ((!gag_pred) * gshare_pred) + (gag_pred * (!gshare_pred));
- // if (update_s_g) // Second is higher
- //   updateCount(&hyb2_s_g[g_bht], (gag_pred == isTaken), 3);
- // if (update_s_gsh) // Second is higher
- //   updateCount(&hyb2_s_gsh[g_bht], (gshare_pred == isTaken), 3);
- // if (update_g_gsh) // Second is higher
- //   updateCount(&hyb2_g_gsh[g_bht], (gshare_pred == isTaken), 3);
+  UINT32 metaVote = 0;
+  if (hyb2_s_g[g_bht] < 2 && hyb2_s_gsh[g_bht] < 2) {
+    metaVote = sag_pred;
+  } else if (hyb2_g_gsh[g_bht] > 1 && hyb2_s_gsh[g_bht] > 1) {
+    metaVote = gshare_pred;
+  } else if (hyb2_g_gsh[g_bht] < 2 && hyb2_s_g[g_bht] > 1) {
+    metaVote = gag_pred;
+  } else {
+    metaVote = (gshare_pred + gag_pred + sag_pred) > 1;
+  }
+  mispredHyb2meta[0] += isForward * ((metaVote != isTaken));
+  mispredHyb2meta[1] += (!isForward) * ((metaVote != isTaken));
+  mispredHyb2meta[2] += (metaVote != isTaken);
+  UINT32 update_s_g = ((!gag_pred) * sag_pred) + (gag_pred * (!sag_pred));
+  UINT32 update_s_gsh =
+      ((!gshare_pred) * sag_pred) + (gshare_pred * (!sag_pred));
+  UINT32 update_g_gsh =
+      ((!gag_pred) * gshare_pred) + (gag_pred * (!gshare_pred));
+  if (update_s_g) // Second is higher
+    updateCount(&hyb2_s_g[g_bht], (gag_pred == isTaken), 3);
+  if (update_s_gsh) // Second is higher
+    updateCount(&hyb2_s_gsh[g_bht], (gshare_pred == isTaken), 3);
+  if (update_g_gsh) // Second is higher
+    updateCount(&hyb2_g_gsh[g_bht], (gshare_pred == isTaken), 3);
 
-  g_bht = ((g_bht << 1) + isTaken) & 0xfff;
+  g_bht = ((g_bht << 1) + isTaken) & 0x1ff;
 }
 
 VOID UpdateCondBrHist(BOOL isTaken) {}
